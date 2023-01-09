@@ -1,0 +1,182 @@
+/* General styles for the body and header */
+body {
+      height: 100%;
+  min-height: 95vh;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 16px;
+  line-height: 1.5;
+  margin: 0;
+  padding: 0;
+}
+
+.content{
+ width: 1140px;
+  max-width: 60%;
+    margin-left: auto;
+    margin-right: auto;
+  padding: 0 20px;
+}
+
+
+header {
+  background-color: #ccc;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+}
+
+/* Style for the logo */
+header img {
+  height: 50px;
+  width: 50px;
+}
+
+/* Style for the navigation menu */
+header nav {
+  display: flex;
+    width: 80%;
+    margin-left:auto;
+    margin-right:auto;
+    justify-content: space-evenly;
+}
+
+header nav ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+header nav li {
+  margin-left: 20px;
+}
+
+header nav a {
+  color: #000;
+  text-decoration: none;
+  font-weight: bold;
+    transition: background .5s ease;
+}
+
+/* Style for the main content */
+main {
+  display: flex;
+  flex-wrap: wrap;
+  margin: 20px;
+}
+
+/* Style for the articles */
+article {
+  flex: 0 0 33%;
+  margin: 20px;
+}
+
+article h2 {
+  font-size: 20px;
+  margin: 10px 0;
+}
+
+article p {
+  margin: 10px 0;
+}
+
+/* Style for the footer */
+footer {
+  background-color: #ccc;
+  padding: 20px;
+  text-align: center;
+}
+
+footer p {
+  margin: 0;
+}
+
+nav {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+nav ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+}
+
+nav li {
+  margin-left: 20px;
+}
+
+nav a {
+  color: #000;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+/* Make the navigation menu responsive */
+@media (max-width: 600px) {
+  nav ul {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  nav li {
+    margin: 10px 0;
+  }
+}
+
+ #cards{text-align:center;}
+    .card{
+      text-align:initial;
+      display:inline-block;
+      border-radius:.5em;
+      border:1px solid #444;
+      margin:.75em; padding:.75em;
+      width:16em; min-height:6em;
+      
+      vertical-align: middle;
+      transition:transform .25s ease;
+      
+      text-decoration:none;
+      background-color:#333;
+      color:silver;
+      box-shadow: 3px 3px 3px 0px #000;
+    }
+    .card:hover{
+      transform: scale(1.03)
+    }
+    .cardicon{
+      width: 1.2em;
+      height:1.2em;
+      vertical-align: middle; /* align with title */
+    }
+    .cardtitle{
+      font-family:Consolas, Courier, monospace;
+      font-weight:bold;
+      font-size:1.1em;
+      margin-left:.5em;
+    }
+
+
+
+
+
+
+
+
+
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: auto;
+  grid-gap: 16px;
+}
+
+.grid-item {
+  grid-column: span 2;
+  grid-row: span 2;
+}
+
+

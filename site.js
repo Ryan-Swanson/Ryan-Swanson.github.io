@@ -1,34 +1,4 @@
-function buildStories(jsonData) {
-
-    var shortStories = jsonData.short_stories;
-
-    shortStories.forEach(function(story) {
-        var title = story.title;
-        var date = story.date;
-        var storyText = story.story;
-
-        var div = document.createElement("div");
-        div.classList.add("grid-item");
-
-        var titleElem = document.createElement("h3");
-        titleElem.textContent = title;
-        div.appendChild(titleElem);
-
-        var dateElem = document.createElement("p");
-        dateElem.textContent = date;
-        div.appendChild(dateElem);
-
-        var storyElem = document.createElement("p");
-        storyElem.textContent = storyText;
-        div.appendChild(storyElem);
-
-        var grid = document.querySelector(".grid");
-        grid.appendChild(div);
-    });
-
-}
-
-stories = {
+let stories = [{
     "title": "The Mouse",
     "date": "2022-01-01",
     "story": "The mouse scurried across the floor, its tiny paws making no sound."
@@ -67,6 +37,37 @@ stories = {
     "title": "The Star",
     "date": "2022-01-08",
     "story": "The star twinkled, its light shining brightly in the night sky."
+}]
+
+
+
+
+
+function buildStories(stories) {
+    var grid = document.getElementById("grid");
+
+    for (let i = 0; i < stories.length; i += 1) {
+        let title = stories[i].title;
+        let date = stories[i].date;
+        let storyText = stories[i].story;
+
+        var div = document.createElement("div");
+        div.classList.add("grid-item");
+
+        var titleElem = document.createElement("h3");
+        titleElem.innerHTML = title;
+        div.appendChild(titleElem);
+
+        var dateElem = document.createElement("p");
+        dateElem.innerHTML = date;
+        div.appendChild(dateElem);
+
+        var storyElem = document.createElement("p");
+        storyElem.innerHTML = storyText;
+        div.appendChild(storyElem);
+
+        grid.appendChild(div);
+    }
 }
 
 

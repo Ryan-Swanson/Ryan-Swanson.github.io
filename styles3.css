@@ -1,0 +1,175 @@
+body {
+    background-color: #2b2b2b;
+}
+
+html,
+body {
+    height: 100%;
+}
+
+#page-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+}
+
+.homePic {
+    max-height: 250px;
+    padding: 2rem;
+    border-radius: 1rem;
+}
+
+.main_home {
+    flex-grow: 1;
+    padding-top: 30vh;
+}
+
+.jumbotron {
+    margin-top: 55px;
+    height: 28vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    width: 100%;
+    background-image: radial-gradient(circle at 50% 110%, #ff7f00 0%, #f9d71c 25%, #212529 20%, #212529 100%);
+    background-size: cover;
+    background-position: center;
+    overflow: hidden;
+}
+
+.about {
+    border-style: groove;
+    border-width: 5px;
+    border-color: red;
+    background-image: linear-gradient(
+        to bottom,
+        #3a3a3a 0%,
+        #3a3a3a 30%,
+        #3a3a3a 30%,
+        #3a3a3a 100%
+    );
+    padding: 2rem;
+    border-radius: 1rem;
+}
+
+.navbar {
+    background-color: #1e3d59;
+}
+
+.card {
+    border-style: groove;
+    border-color: red;
+    background-image: radial-gradient(
+        circle at center,
+        #3a3a3a 4%,
+        #3a3a3a 30%,
+        #3a3a3a 70%,
+        #3a3a3a 100%
+    );
+    padding: 2rem;
+    border-radius: 1rem;
+}
+
+.card-img-top {
+    max-width: 280px;
+}
+
+.blog-post {
+    border-style: groove;
+    border-width: 5px;
+    border-color: #6b8e23;
+    background-image: linear-gradient(
+        to bottom,
+        #3a3a3a 0%,
+        #3a3a3a 30%,
+        #3a3a3a 30%,
+        #3a3a3a 100%
+    );
+    padding: 2rem;
+    border-radius: 1rem;
+    width: 60%;
+    max-width: 800px;
+}
+
+.water-streams {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: -1;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none' %3E%3Cpath d='M50 0 Q 20 25 50 50 Q 80 75 50 100' stroke='rgba(255, 99, 71, 0.6)' stroke-width='4' fill='none'/%3E%3C/svg%3E"),
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none' %3E%3Cpath d='M50 0 Q 80 25 50 50 Q 20 75 50 100' stroke='rgba(255, 99, 71, 0.6)' stroke-width='10' fill='none'/%3E%3C/svg%3E");
+    background-size: 300px 100px;
+    background-repeat: repeat;
+    animation: wave-animation 10s linear infinite;
+}
+
+@keyframes wave-animation {
+    0% {
+        background-position: 0% 0%, 150px 50px;
+    }
+    100% {
+        background-position: 150px 50px, 0% 0%;
+    }
+}
+
+.card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.card-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.grass-jumbotron {
+    position: relative;
+    overflow: hidden;
+    height: 28vh;
+    background-color: #1e3d59;
+}
+
+.grass {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 18%;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none' %3E%3Cpath d='M0 100 C 50 0 50 0 100 100 Z' fill='%236b8e23'/%3E%3C/svg%3E");
+    background-size: 30px 60px;
+    background-repeat: repeat-x;
+}
+
+.landscape-jumbotron {
+    position: relative;
+    overflow: hidden;
+    height: 28vh;
+    background-color: #1e3d59;
+}
+
+.sun {
+    position: absolute;
+    top: 10%;
+    left: 70%;
+    width: 15%;
+    height: 15%;
+    background-image: radial-gradient(circle at 50% 50%, #ff7f00 0%, #ff7f00 80%, transparent 100%);
+}
+
+.mountain {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 40%;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none' %3E%3Cpath d='M0 100 L50 30 L100 100 Z' fill='%236b8e23'/%3E%3C/svg%3E");
+    background-size: cover;
+    background-repeat: no-repeat;
+}

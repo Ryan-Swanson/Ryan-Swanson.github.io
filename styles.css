@@ -1,0 +1,230 @@
+:root {
+    --primary-color: #3498db;
+    --secondary-color: #2c3e50;
+    --background-color: #f4f4f4;
+    --text-color: #333;
+    --accent-color: #e74c3c;
+}
+
+body {
+    font-family: 'Roboto', sans-serif;
+    line-height: 1.6;
+    color: var(--text-color);
+    margin: 0;
+    padding: 0;
+    background-color: var(--background-color);
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+header {
+    background-color: white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    position: fixed;
+    width: 100%;
+    top: 0;
+    z-index: 1000;
+}
+
+nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 5%;
+}
+
+.logo {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+nav ul {
+    list-style: none;
+    display: flex;
+    gap: 2rem;
+}
+
+nav ul li a {
+    text-decoration: none;
+    color: var(--secondary-color);
+    font-weight: 500;
+    transition: color 0.3s ease;
+}
+
+nav ul li a:hover {
+    color: var(--primary-color);
+}
+
+main {
+    padding: 2rem 5%;
+}
+
+#hero {
+    text-align: center;
+    padding: 4rem 0;
+}
+
+h1 {
+    font-size: 3rem;
+    margin-bottom: 0.5rem;
+    color: var(--secondary-color);
+}
+
+.tagline {
+    font-size: 1.2rem;
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+}
+
+.intro {
+    max-width: 600px;
+    margin: 0 auto 2rem;
+}
+
+.cta-button, .secondary-button, .learn-more {
+    display: inline-block;
+    padding: 0.8rem 1.5rem;
+    text-decoration: none;
+    border-radius: 5px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.cta-button {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.cta-button:hover {
+    background-color: #2980b9;
+    transform: translateY(-2px);
+}
+
+.secondary-button {
+    background-color: var(--secondary-color);
+    color: white;
+}
+
+.secondary-button:hover {
+    background-color: #34495e;
+    transform: translateY(-2px);
+}
+
+.learn-more {
+    color: var(--primary-color);
+    border: 1px solid var(--primary-color);
+}
+
+.learn-more:hover {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+h2 {
+    font-size: 2rem;
+    color: var(--secondary-color);
+    margin-bottom: 1.5rem;
+}
+
+#featured-work, #skills-preview {
+    margin-top: 4rem;
+}
+
+.project-card {
+    background-color: white;
+    border-radius: 8px;
+    padding: 2rem;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease;
+}
+
+.project-card:hover {
+    transform: translateY(-5px);
+}
+
+#skills-preview ul {
+    list-style: none;
+    padding: 0;
+}
+
+#skills-preview ul li {
+    margin-bottom: 0.5rem;
+    padding-left: 1.5rem;
+    position: relative;
+}
+
+#skills-preview ul li::before {
+    content: "•";
+    color: var(--primary-color);
+    font-weight: bold;
+    position: absolute;
+    left: 0;
+}
+
+footer {
+    background-color: var(--secondary-color);
+    color: white;
+    text-align: center;
+    padding: 2rem 0;
+    margin-top: 4rem;
+}
+
+.social-links a {
+    color: white;
+    text-decoration: none;
+    margin: 0 10px;
+    transition: color 0.3s ease;
+}
+
+.social-links a:hover {
+    color: var(--primary-color);
+}
+
+@media (min-width: 769px) {
+    main {
+        margin-top: 80px; /* Adjust based on your header height */
+    }
+}
+
+@media (max-width: 768px) {
+    header {
+        position: relative; /* Change to relative positioning on mobile */
+    }
+
+    nav {
+        flex-direction: column;
+        align-items: flex-end;
+    }
+
+    nav ul {
+        margin-top: 1rem;
+        flex-direction: column;
+        align-items: flex-end;
+        width: 100%;
+    }
+
+    nav ul li {
+        margin-bottom: 0.5rem;
+    }
+
+    main {
+        margin-top: 0; /* Remove top margin on mobile */
+    }
+
+    .project-card {
+        padding: 1.5rem;
+    }
+
+    #hero {
+        padding: 2rem 0; /* Reduce padding on mobile */
+    }
+
+    h1 {
+        font-size: 2.5rem; /* Slightly smaller font on mobile */
+    }
+}

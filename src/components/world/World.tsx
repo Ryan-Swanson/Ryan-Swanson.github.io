@@ -143,6 +143,7 @@ function averageColor(image: CanvasImageSource): THREE.Color {
 
 function useScreens(projects: WorldProject[], narrow: boolean, onError: (r: string) => void) {
   const [loaded, setLoaded] = useState<(LoadedScreen | null)[]>(() => projects.map(() => null));
+  const [settled, setSettled] = useState(0);
   const gl = useThree((s) => s.gl);
 
   useEffect(() => {
@@ -164,8 +165,10 @@ function useScreens(projects: WorldProject[], narrow: boolean, onError: (r: stri
           textures.push(tex);
           const color = averageColor(tex.image as CanvasImageSource);
           setLoaded((prev) => prev.map((s, k) => (k === i ? { texture: tex, color } : s)));
+          setSettled((n) => n + 1);
         })
         .catch(() => {
+          setSettled((n) => n + 1);
           if (i === 0) onError("texture");
         });
     });
@@ -177,7 +180,7 @@ function useScreens(projects: WorldProject[], narrow: boolean, onError: (r: stri
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projects, narrow]);
 
-  return loaded;
+  return { loaded, settled };
 }
 
 function Screen({
@@ -262,7 +265,7 @@ function Screen({
 }
 
 function Scene(props: WorldProps) {
-  const { projects, store, narrow, onReady, onError, onOpen, onHover, onRoamExit, exitRoamRef, initialTier } = props;
+  const { projects, store, narrow, onReady, onProgress, onError, onOpen, onHover, onRoamExit, exitRoamRef, initialTier } = props;
   const gl = useThree((s) => s.gl);
   const scene = useThree((s) => s.scene);
   const camera = useThree((s) => s.camera) as THREE.PerspectiveCamera;
@@ -272,7 +275,8 @@ function Scene(props: WorldProps) {
   // Reflections for the props' metal and lacquer. The raymarched field does its own lighting.
   useStudioEnvironment(gl, scene);
   const [hovered, setHovered] = useState<string | null>(null);
-  const loaded = useScreens(projects, narrow, onError);
+  const { loaded, settled } = useScreens(projects, narrow, onError);
+  const [compiled, setCompiled] = useState(false);
 
   const placements = useMemo(
     () =>
@@ -441,12 +445,18 @@ function Scene(props: WorldProps) {
     Promise.all([gl.compileAsync(field.scene, field.cam), gl.compileAsync(scene, camera)])
       .catch(() => undefined)
       .then(() => {
-        if (!cancelled) onReady();
+        if (!cancelled) setCompiled(true);
       });
     return () => {
       cancelled = true;
     };
-  }, [gl, field, scene, camera, onReady]);
+  }, [gl, field, scene, camera]);
+
+  // Report progress to the loading screen, and reveal only once everything is in place.
+  useEffect(() => {
+    onProgress({ screens: settled, total: projects.length, compiled });
+    if (compiled && settled >= projects.length) onReady();
+  }, [compiled, settled, projects.length, onProgress, onReady]);
 
   // A lost GPU context ends the 3D view; the page falls back to the static stage.
   useEffect(() => {

@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { skipLoader } from "./helpers";
 
 const projects = ["fr3t-app", "inputshare", "learncenter-dev", "talkmac", "protuner", "groovemind"];
 const routes = ["/", "/work/", "/about/", ...projects.map((p) => `/work/${p}/`)];
@@ -49,6 +50,7 @@ test.describe("static routes", () => {
 
   test("back and forward move between pages", async ({ page }) => {
     await page.goto("/");
+    await skipLoader(page);
     await page.getByRole("navigation", { name: "Primary" }).getByRole("link", { name: "Work" }).click();
     await expect(page).toHaveURL(/\/work\/$/);
     await page.getByRole("link", { name: "GrooveMind" }).first().click();
@@ -93,6 +95,16 @@ test.describe("static routes", () => {
     await expect(page.locator(`#work a[href="https://fr3t.app/"]`)).toHaveCount(1);
     // Cards without a live product link their title to the case study.
     await expect(page.locator(`#talkmac h2 a[href="/work/talkmac/"]`)).toHaveCount(1);
+  });
+
+  test("the 3D loading screen can be skipped and then gets out of the way", async ({ page }) => {
+    await page.goto("/");
+    const loader = page.getByRole("status").filter({ hasText: "Building the gallery" });
+    await expect(loader).toBeVisible();
+    await skipLoader(page);
+    await expect(loader).toBeHidden();
+    await page.getByRole("link", { name: "Jump to the list" }).click();
+    await expect(page).toHaveURL(/#work$/);
   });
 
   test("contact links are GitHub and LinkedIn only", async ({ page }) => {

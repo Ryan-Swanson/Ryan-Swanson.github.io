@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { skipLoader } from "./helpers";
 
 test.describe("3D world on desktop", () => {
   test("loads, follows the stop index, and keeps labels in sync", async ({ page }) => {
@@ -7,6 +8,9 @@ test.describe("3D world on desktop", () => {
     await page.goto("/?force3d");
     await expect(page.locator("[data-scene]")).toHaveAttribute("data-scene", "ready", { timeout: 30_000 });
     await expect(page.locator("canvas")).toBeVisible();
+    // The loading screen has faded out on its own and the page can scroll again.
+    await expect(page.getByRole("status").filter({ hasText: "Building the gallery" })).toBeHidden();
+    await expect.poll(() => page.evaluate(() => document.documentElement.dataset.loading)).toBeUndefined();
 
     await page.getByRole("navigation", { name: "Flight stops" }).getByRole("link", { name: /ProTuner/ }).click();
     await expect(page).toHaveURL(/#protuner$/);
@@ -34,6 +38,7 @@ test.describe("3D world on desktop", () => {
 
   test("wall labels link to their case studies", async ({ page }) => {
     await page.goto("/#groovemind");
+    await skipLoader(page);
     await page.locator("#groovemind").getByRole("link", { name: /Read the case study/ }).click();
     await expect(page).toHaveURL(/\/work\/groovemind\/$/);
   });
@@ -41,12 +46,14 @@ test.describe("3D world on desktop", () => {
   test("motion toggle follows reduced-motion and can be switched", async ({ page }) => {
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.goto("/");
+    await skipLoader(page);
     await expect(page.locator("html")).toHaveAttribute("data-motion", "off");
     const toggle = page.getByRole("button", { name: /Motion/ });
     await expect(toggle).toHaveAttribute("aria-pressed", "false");
     await toggle.click();
     await expect(page.locator("html")).toHaveAttribute("data-motion", "on");
     await page.reload();
+    await skipLoader(page);
     await expect(page.locator("html")).toHaveAttribute("data-motion", "on");
   });
 

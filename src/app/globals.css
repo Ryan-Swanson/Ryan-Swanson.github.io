@@ -128,3 +128,11 @@ html[data-motion="off"] *::after {
   transition-duration: 0.001ms !important;
   scroll-behavior: auto !important;
 }
+
+/* The 3D loading screen only exists with JavaScript; while it shows, the page holds still. */
+html:not([data-js]) .js-only {
+  display: none;
+}
+html[data-loading] {
+  overflow: hidden;
+}

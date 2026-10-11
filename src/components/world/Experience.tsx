@@ -7,6 +7,7 @@ import type { WallProject } from "./project";
 import { canUseWebGL } from "./webgl";
 import { Placard } from "@/components/site/Placard";
 import { useMotion } from "@/components/site/motion";
+import { Loader, type LoadProgress } from "./Loader";
 import { createWorldStore, type QualityTier, type WorldProject } from "./store";
 
 const loadWorld = () => import("./World");
@@ -117,43 +118,40 @@ export function Experience({ projects, intro }: { projects: WallProject[]; intro
     };
   }, [stops]);
 
-  // Decide on 3D once the page has loaded and gone idle, so it never competes with first paint.
-  // Phones and touch devices wait for the first sign of intent (scroll, touch, key) before
-  // booting the scene, which keeps the page responsive while it loads.
+  const [progress, setProgress] = useState<LoadProgress>({ code: false, screens: 0, total: projects.length, compiled: false });
+  const [skipped, setSkipped] = useState(false);
+  const onProgress = useCallback(
+    (p: { screens: number; total: number; compiled: boolean }) => setProgress((prev) => ({ ...prev, ...p })),
+    [],
+  );
+
+  // Decide on 3D right away: the loading screen covers the page while the 3D code, the
+  // screens, and the shaders load, so there is nothing to protect by waiting.
   useEffect(() => {
     if (scene !== "idle") return;
-    let idleId: number | undefined;
-    let timer: ReturnType<typeof setTimeout> | undefined;
-    const intentEvents = ["scroll", "pointerdown", "touchstart", "keydown", "wheel"] as const;
-    const boot = () => {
-      intentEvents.forEach((ev) => window.removeEventListener(ev, boot));
-      setScene("loading");
-    };
-    const decide = () => {
+    const raf = requestAnimationFrame(() => {
       if (!canUseWebGL()) return setScene("failed");
-      const conn = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection;
-      const small = window.matchMedia("(max-width: 1023px), (pointer: coarse)").matches;
       setTier(startTier(window.matchMedia("(max-width: 1023px)").matches));
+      const conn = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection;
       if (conn?.saveData) return setScene("manual");
-      const force = new URLSearchParams(window.location.search).has("force3d");
-      if (!small || force || window.scrollY > 0) return setScene("loading");
-      intentEvents.forEach((ev) => window.addEventListener(ev, boot, { passive: true, once: true }));
-    };
-    const schedule = () => {
-      // Start fetching the 3D code as soon as the page has loaded, before deciding to show it.
-      if (canUseWebGL()) void loadWorld();
-      if (typeof window.requestIdleCallback === "function") idleId = window.requestIdleCallback(decide, { timeout: 300 });
-      else timer = setTimeout(decide, 200);
-    };
-    if (document.readyState === "complete") schedule();
-    else window.addEventListener("load", schedule, { once: true });
-    return () => {
-      window.removeEventListener("load", schedule);
-      intentEvents.forEach((ev) => window.removeEventListener(ev, boot));
-      if (idleId !== undefined) window.cancelIdleCallback(idleId);
-      if (timer !== undefined) clearTimeout(timer);
-    };
+      loadWorld()
+        .then(() => setProgress((p) => ({ ...p, code: true })))
+        .catch(() => setScene("failed"));
+      setScene("loading");
+    });
+    return () => cancelAnimationFrame(raf);
   }, [scene]);
+
+  const loaderDone = skipped || scene === "ready" || scene === "failed" || scene === "manual";
+  // Hold the page still under the loading screen.
+  useEffect(() => {
+    const html = document.documentElement;
+    if (loaderDone) delete html.dataset.loading;
+    else html.dataset.loading = "1";
+    return () => {
+      delete html.dataset.loading;
+    };
+  }, [loaderDone]);
 
   const scrollToStop = useCallback((k: number) => {
     const el = sectionRef.current;
@@ -266,6 +264,7 @@ export function Experience({ projects, intro }: { projects: WallProject[]; intro
       className="relative flow-root"
       style={{ height: `${stops * 100}svh` }}
     >
+      <Loader progress={progress} done={loaderDone} onSkip={() => setSkipped(true)} />
       {/* Pinned stage: poster images, then the 3D world on top once it is ready. */}
       <div
         ref={stageRef}
@@ -315,6 +314,7 @@ export function Experience({ projects, intro }: { projects: WallProject[]; intro
                 active={active || roam}
                 initialTier={tier}
                 onReady={onReady}
+                onProgress={onProgress}
                 onError={onError}
                 onOpen={onOpen}
                 onHover={setHovered}

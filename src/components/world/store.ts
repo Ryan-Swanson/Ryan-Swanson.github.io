@@ -43,6 +43,8 @@ export interface WorldProps {
   active: boolean;
   initialTier: QualityTier;
   onReady: () => void;
+  /** Loading progress for the intro screen: screens downloaded, and whether shaders compiled. */
+  onProgress: (p: { screens: number; total: number; compiled: boolean }) => void;
   onError: (reason: string) => void;
   onOpen: (slug: string) => void;
   onHover: (slug: string | null) => void;

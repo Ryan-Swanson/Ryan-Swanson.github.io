@@ -6,7 +6,7 @@ export type MotionPref = "on" | "off";
 const KEY = "rs-motion";
 
 /** Inline script that sets <html data-motion> before first paint. */
-export const motionBootScript = `(function(){try{var v=localStorage.getItem("${KEY}");}catch(e){}if(v!=="on"&&v!=="off"){v=window.matchMedia("(prefers-reduced-motion: reduce)").matches?"off":"on";}document.documentElement.dataset.motion=v;})();`;
+export const motionBootScript = `(function(){try{var v=localStorage.getItem("${KEY}");}catch(e){}if(v!=="on"&&v!=="off"){v=window.matchMedia("(prefers-reduced-motion: reduce)").matches?"off":"on";}document.documentElement.dataset.motion=v;document.documentElement.dataset.js="1";})();`;
 
 const listeners = new Set<() => void>();
 

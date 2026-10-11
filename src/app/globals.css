@@ -1,0 +1,130 @@
+@import "tailwindcss";
+
+/*
+  Gallery palette. Dark-first: deep green-black gallery walls, warm paper ink,
+  brass for focus and status, and cream wall labels for each piece.
+*/
+@theme {
+  --color-wall: #131a17;
+  --color-wall-2: #1a231f;
+  --color-wall-3: #222d28;
+  --color-rule: #2f3b36;
+  --color-ink: #ece6d8;
+  --color-ink-2: #aeb2a4;
+  --color-brass: #d6a85c;
+  --color-placard: #ebe4d3;
+  --color-placard-ink: #1b201d;
+  --color-placard-mute: #5c5f55;
+
+  --font-display: var(--font-newsreader), "Iowan Old Style", Georgia, serif;
+  --font-sans: var(--font-schibsted), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, "SF Mono", Menlo, monospace;
+
+  --text-label: 0.75rem;
+  --text-label--line-height: 1.4;
+  --text-label--letter-spacing: 0.06em;
+}
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+  html {
+    background: var(--color-wall);
+    color: var(--color-ink);
+    -webkit-text-size-adjust: 100%;
+  }
+  html[data-motion="on"] {
+    scroll-behavior: smooth;
+  }
+  body {
+    background: var(--color-wall);
+    font-family: var(--font-sans);
+    font-size: 1.0625rem;
+    line-height: 1.6;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+  }
+  ::selection {
+    background: var(--color-brass);
+    color: var(--color-placard-ink);
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-brass);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+  a {
+    color: inherit;
+    text-underline-offset: 0.2em;
+    text-decoration-thickness: 1px;
+  }
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+  p {
+    text-wrap: pretty;
+  }
+}
+
+@layer components {
+  /* Small uppercase mono label used for metadata. */
+  .label {
+    font-family: var(--font-mono);
+    font-size: var(--text-label);
+    line-height: var(--text-label--line-height);
+    letter-spacing: var(--text-label--letter-spacing);
+    text-transform: uppercase;
+  }
+  .prose-case p + p {
+    margin-top: 1rem;
+  }
+  .prose-case ul {
+    display: grid;
+    gap: 0.6rem;
+  }
+  .prose-case li {
+    position: relative;
+    padding-left: 1.25rem;
+  }
+  .prose-case li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0.72em;
+    width: 0.5rem;
+    height: 1px;
+    background: var(--color-brass);
+  }
+  .skip-link {
+    position: absolute;
+    left: 1rem;
+    top: -4rem;
+    z-index: 50;
+    background: var(--color-placard);
+    color: var(--color-placard-ink);
+    padding: 0.5rem 0.9rem;
+  }
+  .skip-link:focus {
+    top: 1rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+html[data-motion="off"] *,
+html[data-motion="off"] *::before,
+html[data-motion="off"] *::after {
+  animation-duration: 0.001ms !important;
+  transition-duration: 0.001ms !important;
+  scroll-behavior: auto !important;
+}

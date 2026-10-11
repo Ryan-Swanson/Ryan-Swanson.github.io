@@ -1,0 +1,312 @@
+{
+  "fr3t-app/workspace": {
+    "src": "/media/fr3t-app/workspace",
+    "widths": [
+      800,
+      1600
+    ],
+    "width": 1600,
+    "height": 1000,
+    "source": "live-site",
+    "captured": "2026-10",
+    "device": "desktop",
+    "texture": {
+      "src": "/media/fr3t-app/workspace-tex.webp",
+      "width": 2048,
+      "height": 1280
+    }
+  },
+  "fr3t-app/practice": {
+    "src": "/media/fr3t-app/practice",
+    "widths": [
+      800,
+      1600
+    ],
+    "width": 1600,
+    "height": 1000,
+    "source": "live-site",
+    "captured": "2026-10",
+    "device": "desktop"
+  },
+  "fr3t-app/reference": {
+    "src": "/media/fr3t-app/reference",
+    "widths": [
+      800,
+      1600
+    ],
+    "width": 1600,
+    "height": 1000,
+    "source": "live-site",
+    "captured": "2026-10",
+    "device": "desktop"
+  },
+  "fr3t-app/chords": {
+    "src": "/media/fr3t-app/chords",
+    "widths": [
+      800,
+      1600
+    ],
+    "width": 1600,
+    "height": 1000,
+    "source": "live-site",
+    "captured": "2026-10",
+    "device": "desktop"
+  },
+  "fr3t-app/mobile-sequencer": {
+    "src": "/media/fr3t-app/mobile-sequencer",
+    "widths": [
+      390,
+      780
+    ],
+    "width": 780,
+    "height": 1688,
+    "source": "live-site",
+    "captured": "2026-10",
+    "device": "phone"
+  },
+  "groovemind/piano-roll": {
+    "src": "/media/groovemind/piano-roll",
+    "widths": [
+      800,
+      1600
+    ],
+    "width": 1600,
+    "height": 1000,
+    "source": "local-fixture",
+    "captured": "2026-10",
+    "device": "desktop",
+    "texture": {
+      "src": "/media/groovemind/piano-roll-tex.webp",
+      "width": 2048,
+      "height": 1280
+    }
+  },
+  "groovemind/drums": {
+    "src": "/media/groovemind/drums",
+    "widths": [
+      800,
+      1600
+    ],
+    "width": 1600,
+    "height": 1000,
+    "source": "local-fixture",
+    "captured": "2026-10",
+    "device": "desktop"
+  },
+  "groovemind/mixer": {
+    "src": "/media/groovemind/mixer",
+    "widths": [
+      800,
+      1600
+    ],
+    "width": 1600,
+    "height": 1000,
+    "source": "local-fixture",
+    "captured": "2026-10",
+    "device": "desktop"
+  },
+  "groovemind/review": {
+    "src": "/media/groovemind/review",
+    "widths": [
+      800,
+      1600
+    ],
+    "width": 1600,
+    "height": 1000,
+    "source": "local-fixture",
+    "captured": "2026-10",
+    "device": "desktop"
+  },
+  "groovemind/export": {
+    "src": "/media/groovemind/export",
+    "widths": [
+      800,
+      1600
+    ],
+    "width": 1600,
+    "height": 1000,
+    "source": "local-fixture",
+    "captured": "2026-10",
+    "device": "desktop"
+  },
+  "learncenter-dev/home": {
+    "src": "/media/learncenter-dev/home",
+    "widths": [
+      800,
+      1600
+    ],
+    "width": 1600,
+    "height": 1000,
+    "source": "live-site",
+    "captured": "2026-10",
+    "device": "desktop",
+    "texture": {
+      "src": "/media/learncenter-dev/home-tex.webp",
+      "width": 2048,
+      "height": 1280
+    }
+  },
+  "learncenter-dev/work": {
+    "src": "/media/learncenter-dev/work",
+    "widths": [
+      800,
+      1600
+    ],
+    "width": 1600,
+    "height": 1000,
+    "source": "live-site",
+    "captured": "2026-10",
+    "device": "desktop"
+  },
+  "learncenter-dev/products": {
+    "src": "/media/learncenter-dev/products",
+    "widths": [
+      800,
+      1600
+    ],
+    "width": 1600,
+    "height": 1000,
+    "source": "live-site",
+    "captured": "2026-10",
+    "device": "desktop"
+  },
+  "learncenter-dev/case-study": {
+    "src": "/media/learncenter-dev/case-study",
+    "widths": [
+      800,
+      1600
+    ],
+    "width": 1600,
+    "height": 1000,
+    "source": "live-site",
+    "captured": "2026-10",
+    "device": "desktop"
+  },
+  "learncenter-dev/mobile": {
+    "src": "/media/learncenter-dev/mobile",
+    "widths": [
+      390,
+      780
+    ],
+    "width": 780,
+    "height": 1688,
+    "source": "live-site",
+    "captured": "2026-10",
+    "device": "phone"
+  },
+  "protuner/tuner": {
+    "src": "/media/protuner/tuner",
+    "widths": [
+      440,
+      880
+    ],
+    "width": 880,
+    "height": 1912,
+    "source": "simulator",
+    "captured": "2026-10",
+    "device": "phone",
+    "texture": {
+      "src": "/media/protuner/tuner-tex.webp",
+      "width": 644,
+      "height": 1400
+    }
+  },
+  "protuner/guided": {
+    "src": "/media/protuner/guided",
+    "widths": [
+      440,
+      880
+    ],
+    "width": 880,
+    "height": 1912,
+    "source": "simulator",
+    "captured": "2026-10",
+    "device": "phone"
+  },
+  "protuner/metronome": {
+    "src": "/media/protuner/metronome",
+    "widths": [
+      440,
+      880
+    ],
+    "width": 880,
+    "height": 1912,
+    "source": "simulator",
+    "captured": "2026-10",
+    "device": "phone"
+  },
+  "protuner/watch": {
+    "src": "/media/protuner/watch",
+    "widths": [
+      208,
+      416
+    ],
+    "width": 416,
+    "height": 496,
+    "source": "simulator",
+    "captured": "2026-10",
+    "device": "watch"
+  },
+  "protuner/watch-presets": {
+    "src": "/media/protuner/watch-presets",
+    "widths": [
+      208,
+      416
+    ],
+    "width": 416,
+    "height": 496,
+    "source": "simulator",
+    "captured": "2026-10",
+    "device": "watch"
+  },
+  "talkmac/overview": {
+    "src": "/media/talkmac/overview",
+    "widths": [
+      960,
+      1920
+    ],
+    "width": 1920,
+    "height": 1080,
+    "source": "native-app",
+    "captured": "2026-10",
+    "device": "desktop",
+    "texture": {
+      "src": "/media/talkmac/overview-tex.webp",
+      "width": 1920,
+      "height": 1080
+    }
+  },
+  "inputshare/mac-home": {
+    "src": "/media/inputshare/mac-home",
+    "widths": [
+      960,
+      1920
+    ],
+    "width": 1920,
+    "height": 1080,
+    "source": "native-app",
+    "captured": "2026-10",
+    "device": "desktop",
+    "texture": {
+      "src": "/media/inputshare/mac-home-tex.webp",
+      "width": 1920,
+      "height": 1080
+    }
+  },
+  "inputshare/windows-layout": {
+    "src": "/media/inputshare/windows-layout",
+    "widths": [
+      1024
+    ],
+    "width": 1024,
+    "height": 576,
+    "source": "native-app",
+    "captured": "2026-10",
+    "device": "desktop",
+    "texture": {
+      "src": "/media/inputshare/windows-layout-tex.webp",
+      "width": 1024,
+      "height": 576
+    }
+  }
+}

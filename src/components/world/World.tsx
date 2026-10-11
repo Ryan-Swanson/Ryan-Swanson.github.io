@@ -141,21 +141,20 @@ function averageColor(image: CanvasImageSource): THREE.Color {
   return col.setHSL(hsl.h, Math.min(1, hsl.s * 1.6 + 0.15), 0.42);
 }
 
-function useScreens(projects: WorldProject[], narrow: boolean, onFirst: () => void, onError: (r: string) => void) {
+function useScreens(projects: WorldProject[], narrow: boolean, onError: (r: string) => void) {
   const [loaded, setLoaded] = useState<(LoadedScreen | null)[]>(() => projects.map(() => null));
   const gl = useThree((s) => s.gl);
-  const firstRef = useRef(false);
 
   useEffect(() => {
     const loader = new THREE.TextureLoader();
     let cancelled = false;
     const textures: THREE.Texture[] = [];
     const aniso = Math.min(8, gl.capabilities.getMaxAnisotropy());
-    (async () => {
-      for (let i = 0; i < projects.length; i++) {
-        const p = projects[i]!;
-        try {
-          const tex = await loader.loadAsync(narrow ? p.textureSmall : p.texture.src);
+    // All screens load in parallel; each appears as soon as it arrives.
+    projects.forEach((p, i) => {
+      loader
+        .loadAsync(narrow ? p.textureSmall : p.texture.src)
+        .then((tex) => {
           if (cancelled) {
             tex.dispose();
             return;
@@ -165,15 +164,11 @@ function useScreens(projects: WorldProject[], narrow: boolean, onFirst: () => vo
           textures.push(tex);
           const color = averageColor(tex.image as CanvasImageSource);
           setLoaded((prev) => prev.map((s, k) => (k === i ? { texture: tex, color } : s)));
-          if (!firstRef.current) {
-            firstRef.current = true;
-            onFirst();
-          }
-        } catch {
+        })
+        .catch(() => {
           if (i === 0) onError("texture");
-        }
-      }
-    })();
+        });
+    });
     return () => {
       cancelled = true;
       textures.forEach((t) => t.dispose());
@@ -277,8 +272,7 @@ function Scene(props: WorldProps) {
   // Reflections for the props' metal and lacquer. The raymarched field does its own lighting.
   useStudioEnvironment(gl, scene);
   const [hovered, setHovered] = useState<string | null>(null);
-  const [firstLoaded, setFirstLoaded] = useState(false);
-  const loaded = useScreens(projects, narrow, () => setFirstLoaded(true), onError);
+  const loaded = useScreens(projects, narrow, onError);
 
   const placements = useMemo(
     () =>
@@ -440,9 +434,9 @@ function Scene(props: WorldProps) {
     dust.mat.uniforms.uPix!.value = dpr;
   }, [size.width, size.height, dpr, post, field, dust]);
 
-  // Compile every shader before revealing the canvas, so the first frames do not stall.
+  // Compile every shader before revealing the canvas, so the first frames do not stall. This
+  // starts at mount, in parallel with the screen downloads; screens power on as they arrive.
   useEffect(() => {
-    if (!firstLoaded) return;
     let cancelled = false;
     Promise.all([gl.compileAsync(field.scene, field.cam), gl.compileAsync(scene, camera)])
       .catch(() => undefined)
@@ -452,7 +446,7 @@ function Scene(props: WorldProps) {
     return () => {
       cancelled = true;
     };
-  }, [firstLoaded, gl, field, scene, camera, onReady]);
+  }, [gl, field, scene, camera, onReady]);
 
   // A lost GPU context ends the 3D view; the page falls back to the static stage.
   useEffect(() => {

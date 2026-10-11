@@ -9,7 +9,8 @@ import { Placard } from "@/components/site/Placard";
 import { useMotion } from "@/components/site/motion";
 import { createWorldStore, type QualityTier, type WorldProject } from "./store";
 
-const World = dynamic(() => import("./World"), { ssr: false });
+const loadWorld = () => import("./World");
+const World = dynamic(loadWorld, { ssr: false });
 
 /**
  * idle: deciding. manual: 3D available on request (Save-Data). loading/ready:
@@ -139,7 +140,9 @@ export function Experience({ projects, intro }: { projects: WallProject[]; intro
       intentEvents.forEach((ev) => window.addEventListener(ev, boot, { passive: true, once: true }));
     };
     const schedule = () => {
-      if (typeof window.requestIdleCallback === "function") idleId = window.requestIdleCallback(decide, { timeout: 1500 });
+      // Start fetching the 3D code as soon as the page has loaded, before deciding to show it.
+      if (canUseWebGL()) void loadWorld();
+      if (typeof window.requestIdleCallback === "function") idleId = window.requestIdleCallback(decide, { timeout: 300 });
       else timer = setTimeout(decide, 200);
     };
     if (document.readyState === "complete") schedule();

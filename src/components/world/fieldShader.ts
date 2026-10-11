@@ -61,6 +61,10 @@ uniform vec3 uPlay[4];
 uniform float uStrAmp[6];
 uniform float uRefl;
 
+// A loop bound the compiler cannot prove is zero, so it keeps loops as loops instead of
+// pasting their bodies in. map() is large, and every inlined copy adds compile time.
+#define ZERO (min(uSteps, 0))
+
 const float FP = 18.0;
 const float PI = 3.14159265;
 const float OPEN[6] = float[6](40.0, 45.0, 50.0, 55.0, 59.0, 64.0);
@@ -520,17 +524,17 @@ vec3 map(vec3 p) {
   gExtra = vec3(1e5, 0.0, 0.0);
   vec3 q = vec3(p.xy - pathXY(p.z), p.z);
   float w = smoothstep(0.35, 0.65, clamp((uBandA - p.z) / max(uBandA - uBandB, 1.0), 0.0, 1.0));
-  vec3 res;
-  if (uMotifA == uMotifB || w < 0.002) res = motif(uMotifA, q, uBandA);
-  else if (w > 0.998) res = motif(uMotifB, q, uBandB);
-  else {
-    // Erosion blend: each motif sinks away as the other takes over. Averaging the two
-    // distance fields would create phantom surfaces between unrelated shapes.
-    vec3 a = motif(uMotifA, q, uBandA);
-    vec3 b = motif(uMotifB, q, uBandB);
-    float da = a.x + w * 7.0;
-    float db = b.x + (1.0 - w) * 7.0;
-    res = da < db ? vec3(da, a.yz) : vec3(db, b.yz);
+  // One motif call site, run once or twice. In the blend zone each motif sinks away as the
+  // other takes over (an erosion blend); averaging two unrelated fields makes phantom walls.
+  bool single = uMotifA == uMotifB || w < 0.002 || w > 0.998;
+  bool onlyB = uMotifA != uMotifB && w > 0.998;
+  vec3 res = vec3(1e5, 0.0, 0.0);
+  for (int side = ZERO; side < 2; side++) {
+    if (single && side > 0) break;
+    bool useB = single ? onlyB : side == 1;
+    vec3 r = motif(useB ? uMotifB : uMotifA, q, useB ? uBandB : uBandA);
+    float d = r.x + (single ? 0.0 : (useB ? 1.0 - w : w) * 7.0);
+    if (d < res.x) res = vec3(d, r.yz);
   }
   // Keep the flight path and the space around each nearby screen clear.
   res.x = max(res.x, 2.0 - length(q.xy));
@@ -544,15 +548,18 @@ vec3 map(vec3 p) {
 }
 
 vec3 calcNormal(vec3 p) {
-  const vec2 k = vec2(1.0, -1.0);
-  float e = 0.002;
-  return normalize(k.xyy * map(p + k.xyy * e).x + k.yyx * map(p + k.yyx * e).x +
-                   k.yxy * map(p + k.yxy * e).x + k.xxx * map(p + k.xxx * e).x);
+  // Tetrahedral normal, written as a loop so map() is compiled once here, not four times.
+  vec3 n = vec3(0.0);
+  for (int i = ZERO; i < 4; i++) {
+    vec3 e = 0.5773 * (2.0 * vec3(float(((i + 3) >> 1) & 1), float((i >> 1) & 1), float(i & 1)) - 1.0);
+    n += e * map(p + 0.002 * e).x;
+  }
+  return normalize(n);
 }
 
 float calcAO(vec3 p, vec3 n) {
   float occ = 0.0, sca = 1.0;
-  for (int i = 0; i < 4; i++) {
+  for (int i = ZERO; i < 4; i++) {
     float h = 0.05 + 0.18 * float(i);
     occ += (h - map(p + n * h).x) * sca;
     sca *= 0.7;

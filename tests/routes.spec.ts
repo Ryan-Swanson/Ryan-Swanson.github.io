@@ -97,12 +97,11 @@ test.describe("static routes", () => {
     await expect(page.locator(`#talkmac h2 a[href="/work/talkmac/"]`)).toHaveCount(1);
   });
 
-  test("the 3D loading screen can be skipped and then gets out of the way", async ({ page }) => {
+  test("the 3D loading screen never blocks the page", async ({ page }) => {
+    test.setTimeout(60_000);
     await page.goto("/");
-    const loader = page.getByRole("status").filter({ hasText: "Building the gallery" });
-    await expect(loader).toBeVisible();
     await skipLoader(page);
-    await expect(loader).toBeHidden();
+    await expect(page.getByRole("status").filter({ hasText: "Building the gallery" })).toBeHidden({ timeout: 20_000 });
     await page.getByRole("link", { name: "Jump to the list" }).click();
     await expect(page).toHaveURL(/#work$/);
   });

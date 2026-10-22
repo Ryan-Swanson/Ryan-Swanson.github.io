@@ -58,7 +58,7 @@ export const profile: Profile = {
   experience: [
     {
       org: "LearnCenter LLC",
-      title: "Founder and Lead Developer",
+      title: "Software Engineer & Founder",
       dates: "Sep 2025 to present",
       location: "Santa Rosa, California",
       lines: [
@@ -77,8 +77,8 @@ export const profile: Profile = {
     },
     {
       org: "Avant Health Sciences",
-      title: "Application Developer",
-      dates: "2020 to 2023",
+      title: "Software Developer",
+      dates: "Jan 2022 to Jun 2023",
       location: "Remote",
       lines: [
         "Built Django and SQL-backed systems with account workflows for patient-matching and deduplication products.",

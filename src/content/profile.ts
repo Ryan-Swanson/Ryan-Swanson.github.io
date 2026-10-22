@@ -81,7 +81,7 @@ export const profile: Profile = {
       dates: "Jan 2022 to Jun 2023",
       location: "Remote",
       lines: [
-        "Built Django and SQL-backed systems with account workflows for patient-matching and deduplication products.",
+        "Built Django and SQL-backed systems with account workflows for patient-matching and deduplication, used in hospital-partner demonstrations.",
         "Automated ETL and data-validation workflows with Python and Bash.",
       ],
     },

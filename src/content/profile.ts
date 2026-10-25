@@ -63,6 +63,7 @@ export const profile: Profile = {
       location: "Santa Rosa, California",
       lines: [
         "I design, build, and run websites and web applications for small businesses, with client identities kept private.",
+        "For one client I built a video-companion publishing platform (Next.js, TypeScript, Firebase) with authenticated editorial review, publishing, and revision rollback.",
         "I publish my own products through the company, including ProTuner on the App Store and fr3t.app.",
       ],
     },
@@ -72,7 +73,8 @@ export const profile: Profile = {
       dates: "Sep 2025 to Dec 2025",
       location: "Santa Rosa, California",
       lines: [
-        "Full-stack consulting: I built AI evaluation demos for an education client with Next.js, FastAPI, and Python, covering frontend, backend, data models, evaluation logic, and deployment.",
+        "With an education client and technical teammates, I delivered five full-stack AI evaluation prototypes in three months using Next.js, FastAPI, and Python.",
+        "Built LangSmith experiment comparisons and versioned prompt controls, and refined scoring logic, data models, and dashboards through client and team feedback.",
       ],
     },
     {
@@ -81,8 +83,8 @@ export const profile: Profile = {
       dates: "Jan 2022 to Jun 2023",
       location: "Remote",
       lines: [
-        "Built Django and SQL-backed systems with account workflows for patient-matching and deduplication, used in hospital-partner demonstrations.",
-        "Automated ETL and data-validation workflows with Python and Bash.",
+        "Built Django and SQL patient-matching and deduplication workflows for hospital-partner demonstrations.",
+        "Automated data preparation and validation with Python and Bash, and tuned queries and matching as demonstration datasets grew from about 10,000 to 10 million records.",
       ],
     },
     {
@@ -129,7 +131,7 @@ export const profile: Profile = {
     {
       title: "Systems and networking",
       detail:
-        "Rust with QUIC and TLS 1.3, SPAKE2 pairing, a versioned C ABI, and Swift bindings shared by native macOS and Windows hosts.",
+        "Rust with QUIC and TLS 1.3 and SPAKE2 pairing: one core used by a macOS app through UniFFI Swift bindings and by a Windows app through a versioned C ABI.",
       projects: ["inputshare"],
     },
     {

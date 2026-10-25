@@ -2,7 +2,7 @@ import { shot } from "./media";
 import type { Project, ProjectSlug } from "./types";
 
 const PRIVATE_SOURCE =
-  "Source is private. The screens and architecture notes here come straight from the current code.";
+  "Source is private. Architecture notes come from the current repository, and each screenshot is labeled with how and when it was captured.";
 
 /* fr3t.app */
 
@@ -38,7 +38,8 @@ const fr3t: Project = {
       "A music theory engine I wrote for note spelling, scale degrees, chord voicings, and CAGED positions.",
       "A chord sequencer with genre presets, swing, looping, and a metronome, played through Tone.js samples and an effects chain.",
       "Note-finding and interval-training practice modes.",
-      "Statically generated scale and chord reference pages that open into the app with the same state.",
+      "Statically generated scale and chord reference pages for guitar and bass that open into the app with the same state.",
+      "Step-by-step guides on chords, TAB, fretboard notes, and theory.",
     ],
     architecture: [
       "Next.js App Router with React and TypeScript. The interactive workspace runs in the browser, and reference routes are generated at build time with generateStaticParams.",
@@ -50,11 +51,11 @@ const fr3t: Project = {
     decisions: [
       {
         title: "Write the theory engine instead of using a library",
-        body: "Note names on the fretboard, the reference pages, and printable workbooks all come from one engine, so I needed full control over spelling rules. It spells a black-key tonic whichever way gives fewer accidentals for the chosen scale (Db major, but C# minor) and keeps interval names like #11 and b5 distinct. Owning the theory code meant giving it its own validation scripts in CI, so every spelling rule is checked on every change.",
+        body: "Note names on the fretboard, the reference pages, and printable workbooks all come from one engine, so I needed full control over spelling rules. It spells a black-key tonic whichever way gives fewer accidentals for the chosen scale (Db major, but C# minor) and keeps interval names like #11 and b5 distinct. Owning the theory code meant giving it its own validation scripts, which run in CI on every change.",
       },
       {
         title: "Version every persisted store",
-        body: "There are no accounts, so localStorage is the only place a returning user's settings live. Every persisted store declares a version and a migration, and a guard covers a Zustand v5 merge behavior that would otherwise overwrite the seeded starter progression. Returning users keep their settings across every release.",
+        body: "There are no accounts, so localStorage is the only place a returning user's settings live. Every persisted store declares a version and a migration, and a guard covers a Zustand v5 merge behavior that would otherwise overwrite the seeded starter progression. Returning users keep their settings when the app updates.",
       },
       {
         title: "Use URLs as the share format",
@@ -66,14 +67,13 @@ const fr3t: Project = {
       body: "Chords on the grid, including triplet positions between sixteenth-note lines, have to strum exactly with the metronome, survive tempo, swing, and loop changes, and never double-trigger on a loop wrap or seek. The scheduler looks for upcoming blocks in quarter-beat windows through Transport.scheduleRepeat, but schedules each strum at its exact audio-context time, so off-grid triplets land where they belong. A set of already-strummed block IDs prevents duplicates; it is cleared when the tick moves backward or the Transport fires loopStart, which also re-primes blocks that are active at the loop start. Trigger times are forced into the future and kept strictly increasing, with a 0.5 ms offset for simultaneous blocks, because Tone.Player throws when two starts share a timestamp. The playhead reads Transport ticks directly and the store receives only throttled position updates, so playback does not cause a React render every frame.",
     },
     validation: [
-      "About 620 Vitest unit tests for the app, plus separate suites for the printable-workbook tooling.",
+      "About 620 Vitest unit tests for the app (counted in the source, October 2026), plus separate suites for the printable-workbook tooling.",
       "22 Playwright browser suites cover the audio lifecycle, sequencer integration, practice modes, responsive and landscape layouts, keyboard access, and visual regression.",
       "CI runs lint, a type check, the theory validation scripts, unit tests, a production build, a standalone smoke test, and browser checks in Chromium and WebKit on every change.",
     ],
     result:
       "fr3t.app is live and free to use without an account, with the fretboard, sequencer, practice modes, and statically generated scale and chord reference pages built to be found through search.",
     next: [
-      "Bass chord voicings and a new round of theory refinements, already built and tested in the repository.",
       "A native iPhone version of fr3t, built in SwiftUI.",
       "Optional sync, so settings and progressions follow a player between devices.",
     ],
@@ -116,7 +116,7 @@ const inputShare: Project = {
   status: {
     label: "Available by arrangement",
     detail:
-      "Native apps for macOS and Windows, with two-way sharing confirmed between a Mac and a Windows PC. Linux machines join as receivers. Available by arrangement ahead of a public release.",
+      "Native apps for macOS and Windows that I use daily to share one keyboard and mouse between a Mac and a Windows PC. Linux machines join as receivers. Available by arrangement ahead of a public release.",
     tone: "limited",
   },
   role: "Sole designer and developer",
@@ -150,11 +150,11 @@ const inputShare: Project = {
       },
       {
         title: "Explicit pairing, no trust on first use",
-        body: "A receiver that accepts any host on the LAN is an input-injection hole. Production receivers require a SPAKE2 short-code exchange that pins identities, and the trust-on-first-use flag is labeled development-only. Pairing takes one short code, and only computers the user approved can ever send input.",
+        body: "A receiver that accepts any host on the LAN is an input-injection hole. Production receivers require a SPAKE2 short-code exchange that pins identities, and the trust-on-first-use flag is labeled development-only. Pairing takes one short code, and only computers the user has approved are accepted as input sources.",
       },
       {
         title: "One Rust engine behind a versioned C ABI",
-        body: "Instead of growing a second session client for Windows, the WinUI app loads the same Rust engine through a C ABI that reports its version, schema versions, and a capability bitmask, and it refuses a library that does not match. A build check also stops the GUI from spawning the command-line tool or reimplementing pairing in C#. Pairing, trust, and reconnect logic exist once and behave identically on both platforms.",
+        body: "Instead of growing a second session client for Windows, the WinUI app loads the same Rust engine through a C ABI that reports its version, schema versions, and a capability bitmask, and it refuses a library that does not match. A build check also stops the GUI from spawning the command-line tool or reimplementing pairing in C#. Pairing, trust, and reconnect logic exist once, in Rust, for both platforms.",
       },
     ],
     hardProblem: {
@@ -162,16 +162,16 @@ const inputShare: Project = {
       body: "On the Windows receiver tray, a user can cancel pairing at almost the same moment the native listener commits the new host to the trust store. The tray used to treat the user's stop request as proof that pairing had no effect, so it could say “Pairing cancelled” while the host was in fact trusted. I changed it to report a cancellation only when the native process's own terminal receipt also says cancelled. If that receipt is missing or says anything else, the outcome is “unconfirmed” and the tray asks the user to review Trusted Hosts, and a committed trust record still wins over a stop request. New test cases cover a receipt that is present but still ready, a deleted receipt, and a matched native cancellation.",
     },
     validation: [
-      "October 2026 qualification runs: 772 macOS tests with zero failures, and on Windows 813 Rust tests, 307 core tests, and 408 native adapter tests passing, with zero WinUI build warnings.",
-      "Two-machine testing confirmed smooth sharing in both directions, Mac to Windows and Windows to Mac, including clicking, typing, scrolling, pausing, and returning input.",
+      "October 2026 qualification runs: the macOS suite ran 772 tests (749 passed, 23 skipped, none failed), and on Windows 813 Rust, 307 core, and 408 native adapter tests passed with zero WinUI build warnings.",
+      "In my own two-machine testing in October 2026, sharing worked in both directions, Mac to Windows and Windows to Mac, including clicking, typing, scrolling, pausing, and returning input.",
       "CI runs rustfmt, clippy, the Rust workspace tests, and contract tests, and a native workflow builds the macOS ARM64 release and the Windows x64 MSIX package.",
     ],
     result:
-      "InputShare 0.3.6 runs as native apps on macOS and Windows on one shared Rust engine, and I use it to drive a Mac and a Windows PC from one keyboard and mouse. It is available by arrangement while I prepare a public release.",
+      "InputShare 0.4.0 runs as native apps on macOS and Windows on one shared Rust engine, and I use it to drive a Mac and a Windows PC from one keyboard and mouse. It is available by arrangement while I prepare a public release.",
     next: [
       "A signed public release for macOS and Windows.",
       "A desktop app for Linux, building on the Linux receiver that already works.",
-      "Sharing beyond one local network.",
+      "Native file drag and drop between Mac and Windows, now in validation.",
     ],
     gallery: [
       inputShareHero,
@@ -195,7 +195,7 @@ const learnCenterDev: Project = {
   slug: "learncenter-dev",
   title: "learncenter.dev",
   kind: "Company website",
-  summary: "The website for my company, LearnCenter LLC: services, anonymized client work, and products.",
+  summary: "My company's site: Next.js with a separate FastAPI contact service, enforced security headers, and anonymized client case studies.",
   medium: ["Next.js", "TypeScript", "Tailwind CSS", "FastAPI", "Firebase App Hosting"],
   platforms: ["Web"],
   status: {
@@ -230,15 +230,15 @@ const learnCenterDev: Project = {
     decisions: [
       {
         title: "Anonymize client work by default",
-        body: "Clients did not sign up to be portfolio pieces, so every case study withholds the business name, domain, and contact details and uses hard-redacted screenshots. When a client has told me about an outcome, the site presents it as the client's own report, not as a measured result. Clients can trust that working with me will never put their business on display without their say.",
+        body: "Clients did not sign up to be portfolio pieces, so every case study withholds the business name, domain, and contact details and uses hard-redacted screenshots. When a client has told me about an outcome, the site presents it as the client's own report, not as a measured result. No client appears by name unless they choose to.",
       },
       {
         title: "Keep the contact backend separate",
-        body: "The contact form is the only part that needs secrets, so it lives in a small FastAPI service rather than in the Next.js app. The service fails closed: without SMTP configuration, readiness checks return 503 and submissions get a clear retry message instead of disappearing. Secrets never touch the frontend, and the form can never silently drop a lead.",
+        body: "The contact form is the only part that needs secrets, so it lives in a small FastAPI service rather than in the Next.js app. The service fails closed: without SMTP configuration, readiness checks return 503 and submissions get a clear retry message instead of disappearing. Secrets stay out of the frontend, and a misconfigured server shows the visitor a retry message instead of losing the message.",
       },
       {
         title: "Content in code, not a CMS",
-        body: "Services, work items, products, and guides are typed TypeScript modules, so a broken reference fails the build and every change goes through review and CI. Every update gets the same review and testing as code.",
+        body: "Services, work items, products, and guides are typed TypeScript modules, so a broken reference fails the build and every content change goes through the same review and CI as code.",
       },
     ],
     hardProblem: {
@@ -291,7 +291,7 @@ const talkMac: Project = {
   slug: "talkmac",
   title: "TalkMac",
   kind: "macOS app",
-  summary: "Local-first macOS dictation that types at the cursor, with optional validated text refinement.",
+  summary: "A Mac dictation app that runs speech recognition on the device and types into whichever app has focus.",
   medium: ["Swift 6", "AppKit and SwiftUI", "Core ML via FluidAudio", "MLX", "SQLite via GRDB"],
   platforms: ["macOS 26 or later on Apple Silicon"],
   status: {
@@ -322,12 +322,12 @@ const talkMac: Project = {
       "A versioned model store that pins revisions, expected files, sizes, and hashes.",
       "GRDB over SQLite for history (with FTS5 search), modes, and diagnostics. Credentials live in the Keychain.",
       "Bounded integrations for Codex, Chrome, and Safari that use authenticated IPC and fail closed.",
-      "61 architecture decision records and a dedicated architecture test target track the layering.",
+      "67 architecture decision records and a dedicated architecture test target track the layering.",
     ],
     decisions: [
       {
         title: "Local by default, cloud only by consent",
-        body: "Microphone audio stays on the Mac for local dictation. Cloud refinement is text-only, needs the user's own key in the Keychain and per-mode permission, and falls back to local text if validation fails. Privacy is the default, not an upgrade.",
+        body: "Microphone audio stays on the Mac for local dictation. Cloud refinement is text-only, needs the user's own key in the Keychain and per-mode permission, and falls back to local text if validation fails.",
       },
       {
         title: "Treat model output as a proposal",
@@ -335,7 +335,7 @@ const talkMac: Project = {
       },
       {
         title: "Commands fail closed",
-        body: "Voice commands can act in other apps, so TalkMac denies permission expansion whenever it cannot prove the scope, refuses unknown protocol versions, and keeps model-reported success marked as unverified. Emergency Stop revokes local authority before waiting on the server. A voice command can never do more than the user approved.",
+        body: "Voice commands can act in other apps, so TalkMac denies permission expansion whenever it cannot prove the scope, refuses unknown protocol versions, and keeps model-reported success marked as unverified. Emergency Stop revokes local authority before waiting on the server.",
       },
     ],
     hardProblem: {
@@ -343,12 +343,12 @@ const talkMac: Project = {
       body: "Some editors report success for an Accessibility text write and then discard it. In July 2026 testing, Safari accepted the write while leaving a web textarea empty, and Chromium and Electron apps behaved the same way. I limited direct Accessibility writes to TextEdit, Notes, and Mail, which passed physical testing. Everywhere else TalkMac puts the text on a marked pasteboard, sends Command-V to that specific process, and restores the clipboard; if the clipboard cannot be restored, it types prebuilt Unicode key events in surrogate-safe chunks of at most 32 UTF-16 units. It verifies the result at 150 ms and again 350 ms later, and a mismatch fails the dictation and keeps the text in History instead of claiming success. Secure fields get copy-only recovery, and once a direct write has been attempted, an ambiguous result cannot trigger a fallback paste, which prevents double insertion.",
     },
     validation: [
-      "The full Swift package suite passes 1,768 tests (October 2026), backed by about 2,000 Swift Testing cases and a dedicated architecture test target.",
+      "In a mid-October 2026 local run, the Swift package suite passed 2,042 tests (15 skipped), alongside a dedicated architecture test target.",
       "In a July 2026 benchmark on an M1 Max with a warm Parakeet model, p95 recognition time was 290 ms for 5.2 seconds of audio and 550 ms for 30 seconds.",
-      "Physical insertion testing passed in 10 installed apps, and installed builds are Developer ID signed, notarized, and accepted by Gatekeeper.",
+      "In July 2026 physical testing, insertion worked in 10 installed apps. Installed builds are Developer ID signed, notarized, and accepted by Gatekeeper.",
     ],
     result:
-      "TalkMac 0.1.0 is a signed and notarized release candidate that I use every day: 1,001 dictations and about 103,000 words so far, which it estimates saved me nearly seven hours of typing.",
+      "TalkMac 0.1.0 is a signed and notarized release candidate that I use every day: as of October 11, 2026, 1,001 dictations and about 103,000 words, which it estimates saved me nearly seven hours of typing.",
     next: [
       "A public release with signed automatic updates.",
       "Final qualification of the voice command workflow across more apps.",
@@ -388,14 +388,13 @@ const proTuner: Project = {
       href: "https://apps.apple.com/us/app/protuner-tuner-metronome/id6761435770",
       kind: "app-store",
     },
-    { label: "Support", href: "https://learncenter.dev/protuner/support", kind: "support" },
   ],
   sourceNote: PRIVATE_SOURCE,
   caseStudy: {
     problem:
       "String players need a tuner that reads plucked notes steadily and a metronome that stays in time, ideally on the wrist during practice. Raw pitch tracking on real strings jumps octaves and reacts to noise, so the hard part is deciding when a reading is trustworthy enough to show.",
     audience:
-      "Beginner and hobbyist string players, including guitar, bass, ukulele, banjo, mandolin, violin, and cello.",
+      "Beginner and hobbyist string players, including guitar, bass, ukulele, banjo, mandolin, violin, and cello. Version 1.0 is on the App Store; the audio-session, Watch-sync, and pitch-trust work described below is built for the next update.",
     built: [
       "A chromatic tuner with note, frequency, and cents readout, guided tuning for 7 instruments, and custom tunings.",
       "A metronome with presets, setlists, accents, subdivisions, and tap tempo, scheduled by audio sample time.",
@@ -413,11 +412,11 @@ const proTuner: Project = {
     decisions: [
       {
         title: "The phone leads only when the clock is trustworthy",
-        body: "The Watch follows the phone only when the phone is reachable and a fresh clock estimate from ping and acknowledgment timestamps has an uncertainty of 40 ms or less. Otherwise the Watch keeps time on its own clock. The two devices stay in step whenever the connection allows it, and the metronome never stutters when it does not.",
+        body: "The Watch follows the phone only when the phone is reachable and a fresh clock estimate from ping and acknowledgment timestamps has an uncertainty of 40 ms or less. Otherwise the Watch keeps time on its own clock. The two devices stay in step whenever the connection allows it, and the Watch keeps steady time on its own when it does not.",
       },
       {
         title: "Foreground-only playback on the Watch",
-        body: "watchOS extended runtime sessions are meant for specific health and wellness session types, and music practice is not one of them. I kept Watch playback in the foreground, which follows Apple's rules and keeps the app safe through App Review.",
+        body: "watchOS extended runtime sessions are meant for specific health and wellness session types, and music practice is not one of them. For the next update I moved Watch playback to the foreground only, which keeps the app inside Apple's rules as it grows.",
       },
       {
         title: "One owner for the audio session",
@@ -429,7 +428,7 @@ const proTuner: Project = {
       body: "Raw pitch tracker output on plucked strings jumps octaves, drifts, and reads noise as pitch, and smoothing across a note boundary can show a false in-tune reading and fire a false haptic. Soundpipe's tracker gives the first estimate, and ProTuner then tests that frequency and its 1/4, 1/3, 1/2, and 2x candidates with normalized autocorrelation to correct octave errors. Three independent gates on signal level, tracker amplitude, and periodicity reject broadband noise. A 5-frame median filter (7 frames below 120 Hz when low-frequency assist is on) steadies the reading, smoothing resets on a note change, and the display locks only after at least three same-note samples and a minimum rolling confidence. Reference tones that the app plays itself suppress pitch acceptance, so it cannot tune to its own output.",
     },
     validation: [
-      "316 XCTest methods across the iOS unit, iOS UI, and Watch test targets.",
+      "316 XCTest methods across the iOS unit, iOS UI, and Watch test targets (counted in the source, October 2026; most were added after 1.0).",
       "An accuracy harness feeds harmonic test signals through the production pitch detector to check octave correction, gating, and lock behavior.",
       "Regression suites cover metronome timing and Watch connectivity session handling.",
     ],
@@ -473,15 +472,15 @@ const grooveMind: Project = {
   slug: "groovemind",
   title: "GrooveMind",
   kind: "Music generation workstation",
-  summary: "A local MIDI workstation where a model plans the music and code writes the notes.",
+  summary: "A local MIDI workstation where an OpenAI model plans the music and deterministic code writes the notes.",
   medium: ["Next.js", "FastAPI", "Pydantic", "OpenAI structured outputs", "Tone.js"],
   platforms: ["Web, run locally"],
   status: {
     label: "Working prototype",
-    detail: "Runs locally with full editing, revisions, and MIDI export.",
+    detail: "Runs on my machine. Generation calls OpenAI; editing, revisions, and MIDI export work without it.",
     tone: "development",
   },
-  role: "Designer and lead developer",
+  role: "Sole designer and developer",
   years: "2025 to 2026",
   hero: grooveMindHero,
   links: [],
@@ -507,15 +506,15 @@ const grooveMind: Project = {
     decisions: [
       {
         title: "The model plans, code composes",
-        body: "The model returns a constrained symbolic blueprint of sections, harmony, and drum strategy, and a deterministic engine turns it into notes. Results can be reproduced, tested offline, and edited note by note. Every result is reproducible and safe to edit.",
+        body: "The model returns a constrained symbolic blueprint of sections, harmony, and drum strategy, and a deterministic engine turns it into notes. Results can be reproduced, tested offline, and edited note by note.",
       },
       {
         title: "No silent fallback",
-        body: "When the provider is unavailable, generation says so instead of quietly substituting canned music. Token-limit failures are not replayed, and a failed optional refinement keeps the existing valid version. Users always get an honest result they can trust.",
+        body: "When the provider is unavailable, generation says so instead of quietly substituting canned music. Token-limit failures are not replayed, and a failed optional refinement keeps the existing valid version.",
       },
       {
         title: "Exact time instead of floats",
-        body: "Positions are exact fractions at 960 PPQ and meters carry their groupings, so odd meters, partial clips, and loop ends export without rounding drift. Loops line up perfectly when dropped into any DAW.",
+        body: "Positions are exact fractions at 960 PPQ and meters carry their groupings, so odd meters, partial clips, and loop ends export without rounding drift.",
       },
     ],
     hardProblem: {
@@ -523,12 +522,12 @@ const grooveMind: Project = {
       body: "A 7/8 groove should feel like 3+2+2 or 2+2+3, not seven equal pulses, and the bar has to end exactly so it loops in a DAW. Float timing and templates shaped around 4/4 break both. The meter definition validates that groupings are positive and sum to the numerator, and it exposes exact fraction positions. Drum generation derives its accents from the grouping and applies bounded fills, and a test asserts that a 7/8 bar grouped 2+2+3 accents at exactly 0, 1, and 2 quarter notes. Export writes the grouping into the meter map, and a fixture checks a 3+2+2 pulse with an exact two-bar duration.",
     },
     validation: [
-      "About 520 backend tests across 63 files and 129 frontend tests across 28 files.",
+      "About 520 backend test functions across 63 files and 129 frontend tests across 28 files (counted in the source, October 2026).",
       "The CI workflow runs ruff, mypy, and pytest with model calls disabled and an empty API key, plus a frontend job.",
       "Frontend tests block network access, and authored fixture sessions exercise the engine and editors without model calls.",
     ],
     result:
-      "GrooveMind is a working prototype with generation, a full editor, revisions, candidate comparison, and clean MIDI export into any DAW.",
+      "GrooveMind is a working prototype with generation, a full editor, revisions, candidate comparison, and standard MIDI export for finishing tracks in a DAW.",
     next: [
       "A hosted version, so musicians can try it without a local setup.",
       "Listening sessions with musicians to tune the engine's musical choices.",

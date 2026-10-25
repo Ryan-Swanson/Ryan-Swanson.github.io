@@ -16,7 +16,9 @@ type Params = { params: Promise<{ slug: string }> };
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const project = getProject((await params).slug);
   if (!project) return {};
-  const image = `${project.hero.src}-${project.hero.widths.at(-1)}.webp`;
+  // Social cards are landscape; a tall phone capture crops badly, so phone heroes use the site card.
+  const tall = project.hero.device === "phone" || project.hero.device === "watch";
+  const image = tall ? "/og.png" : `${project.hero.src}-${project.hero.widths.at(-1)}.webp`;
   return {
     title: project.title,
     description: project.summary,
@@ -25,7 +27,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
       title: `${project.title} | Ryan Swanson`,
       description: project.summary,
       url: `/work/${project.slug}/`,
-      images: [{ url: image, width: project.hero.width, height: project.hero.height, alt: project.hero.alt }],
+      images: [tall ? { url: image, width: 1200, height: 630, alt: "Ryan Swanson: selected software projects" } : { url: image, width: project.hero.width, height: project.hero.height, alt: project.hero.alt }],
     },
   };
 }
@@ -56,22 +58,22 @@ export default async function CaseStudy({ params }: Params) {
 
   return (
     <article className="mx-auto max-w-[90rem] px-4 sm:px-8">
-      <nav aria-label="Breadcrumb" className="label pt-8 text-ink-2">
-        <Link prefetch={false} href="/work/" className="hover:text-brass">
+      <nav aria-label="Breadcrumb" className="label flex items-center gap-1 pt-6 text-ink-2">
+        <Link prefetch={false} href="/work/" className="-ml-2 inline-flex min-h-11 min-w-11 items-center px-2 hover:text-brass">
           Work
         </Link>
         <span aria-hidden="true"> / </span>
         <span aria-current="page">{project.title}</span>
       </nav>
 
-      <header className="grid gap-10 pt-6 pb-10 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] lg:gap-16">
+      <header className="grid gap-10 pt-4 pb-10 xl:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] xl:gap-16">
         <div>
           <p className="label text-ink-2">{project.kind}</p>
-          <h1 className="mt-3 font-display text-5xl leading-[0.98] tracking-[-0.01em] sm:text-7xl">{project.title}</h1>
-          <p className="mt-5 max-w-[36rem] text-xl leading-relaxed">{project.summary}</p>
+          <h1 className="mt-3 font-display text-5xl leading-[0.98] tracking-[-0.01em] sm:text-7xl short:text-5xl">{project.title}</h1>
+          <p className="mt-5 max-w-[36rem] text-xl leading-relaxed short:mt-3 short:text-lg">{project.summary}</p>
         </div>
-        <div className="self-end bg-placard p-5 text-placard-ink">
-          <dl className="grid grid-cols-[6.5rem_1fr] gap-x-4 gap-y-2 text-[0.95rem]">
+        <div className="max-w-[44rem] self-end bg-placard p-5 text-placard-ink">
+          <dl className="grid grid-cols-[5.25rem_1fr] gap-x-3 gap-y-2 text-[0.95rem] sm:grid-cols-[6.5rem_1fr] sm:gap-x-4">
             <dt className="label pt-0.5 text-placard-mute">Role</dt>
             <dd>{project.role}</dd>
             <dt className="label pt-0.5 text-placard-mute">Years</dt>
@@ -105,7 +107,8 @@ export default async function CaseStudy({ params }: Params) {
         </div>
       </header>
 
-      <div className={heroIsNarrow ? "mx-auto max-w-[20rem]" : ""}>
+      {/* A phone capture is tall: cap its width so the whole screen fits in the viewport, even in landscape. */}
+      <div className={heroIsNarrow ? "mx-auto w-[min(15rem,39svh)] sm:w-[min(17rem,39svh)]" : ""}>
         <Shot media={project.hero} sizes="(min-width: 1440px) 1376px, 100vw" priority />
       </div>
 
@@ -156,19 +159,33 @@ export default async function CaseStudy({ params }: Params) {
               Screens
             </h2>
             {wide.length > 0 && (
-              <div className="mt-6 grid items-start gap-x-8 gap-y-10 md:grid-cols-2">
+              <div className="mt-6 grid items-start gap-x-8 gap-y-10 lg:grid-cols-2">
                 {wide.map((m) => (
-                  <Shot key={m.src} media={m} sizes="(min-width: 768px) 45vw, 100vw" />
+                  <Shot key={m.src} media={m} sizes="(min-width: 1024px) 45vw, 100vw" />
                 ))}
               </div>
             )}
             {tall.length > 0 && (
               <div className="mt-10 flex flex-wrap items-start justify-center gap-x-10 gap-y-10 md:justify-start">
-                {tall.map((m) => (
-                  <div key={m.src} className={m.device === "watch" ? "w-[11rem]" : "w-[15rem]"}>
-                    <Shot media={m} sizes={m.device === "watch" ? "176px" : "240px"} />
+                {tall
+                  .filter((m) => m.device === "phone")
+                  .map((m) => (
+                    <div key={m.src} className="w-[15rem]">
+                      <Shot media={m} sizes="240px" />
+                    </div>
+                  ))}
+                {/* Watch screens wrap together rather than leaving one alone on a row. */}
+                {tall.some((m) => m.device === "watch") && (
+                  <div className="flex flex-wrap items-start justify-center gap-x-10 gap-y-10">
+                    {tall
+                      .filter((m) => m.device === "watch")
+                      .map((m) => (
+                        <div key={m.src} className="w-[11rem]">
+                          <Shot media={m} sizes="176px" />
+                        </div>
+                      ))}
                   </div>
-                ))}
+                )}
               </div>
             )}
           </section>

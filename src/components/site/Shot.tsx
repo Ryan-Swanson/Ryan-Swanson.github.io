@@ -42,12 +42,22 @@ export function Shot({ media, sizes, priority = false, className = "", figure = 
     />
   );
   if (!figure) return img;
+  const full = `${media.src}-${largest}.webp`;
   return (
     <figure className="w-full">
-      <div className="overflow-hidden border border-rule bg-wall-2">{img}</div>
+      {/* Dense desktop captures are hard to read at phone width, so every figure opens full size. */}
+      <a href={full} target="_blank" rel="noopener" className="block overflow-hidden border border-rule bg-wall-2 hover:border-brass">
+        {img}
+        <span className="sr-only">(opens the full-size screenshot in a new tab)</span>
+      </a>
       <figcaption className="mt-2 text-[0.9rem] text-ink-2">
         {media.caption && <span className="text-ink">{media.caption} </span>}
-        <span className="label block pt-1 text-ink-2/90">{provenance(media)}</span>
+        <span className="label flex flex-wrap items-baseline justify-between gap-x-4 pt-1 text-ink-2/90">
+          <span>{provenance(media)}</span>
+          <a href={full} target="_blank" rel="noopener" className="inline-flex min-h-11 items-center gap-1 hover:text-brass" aria-hidden="true" tabIndex={-1}>
+            Full size <span>↗</span>
+          </a>
+        </span>
       </figcaption>
     </figure>
   );

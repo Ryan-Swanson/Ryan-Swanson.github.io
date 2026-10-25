@@ -5,8 +5,13 @@ import { getProject } from "@/content/projects";
 
 export const metadata: Metadata = {
   title: "About",
-  description: "Experience, education, and the capabilities shown by Ryan Swanson's projects.",
+  description: "My experience, education, and the capabilities my projects show.",
   alternates: { canonical: "/about/" },
+  openGraph: {
+    title: "About | Ryan Swanson",
+    description: "My experience, education, and the capabilities my projects show.",
+    url: "/about/",
+  },
 };
 
 export default function About() {
@@ -29,20 +34,19 @@ export default function About() {
             <div key={c.title}>
               <h3 className="font-display text-xl text-brass">{c.title}</h3>
               <p className="mt-2 text-ink-2">{c.detail}</p>
-              <p className="label mt-3">
-                {c.projects.map((slug, i) => {
+              <ul className="label mt-2 flex flex-wrap gap-x-4" aria-label={`Projects that show ${c.title.toLowerCase()}`}>
+                {c.projects.map((slug) => {
                   const p = getProject(slug);
                   if (!p) return null;
                   return (
-                    <span key={slug}>
-                      {i > 0 && ", "}
-                      <Link prefetch={false} href={`/work/${slug}/`} className="hover:text-brass">
+                    <li key={slug}>
+                      <Link prefetch={false} href={`/work/${slug}/`} className="inline-flex min-h-11 items-center underline decoration-rule underline-offset-4 hover:text-brass">
                         {p.title}
                       </Link>
-                    </span>
+                    </li>
                   );
                 })}
-              </p>
+              </ul>
             </div>
           ))}
         </div>
@@ -57,9 +61,11 @@ export default function About() {
             <li key={e.org + e.dates} className="grid gap-2 border-t border-rule/60 py-6 first:border-t-0 md:grid-cols-[14rem_minmax(0,1fr)] md:gap-10">
               <p className="label pt-1.5 text-ink-2">{e.dates}</p>
               <div>
-                <h3 className="text-lg">
+                {/* On phones the company gets its own line instead of a balanced split mid-title. */}
+                <h3 className="text-lg [text-wrap:wrap]">
                   <span className="font-medium">{e.title}</span>
-                  <span className="text-ink-2">, {e.org}</span>
+                  <span className="sr-only sm:not-sr-only">, </span>
+                  <span className="block text-ink-2 sm:inline">{e.org}</span>
                 </h3>
                 <ul className="prose-case mt-2 max-w-[44rem] text-ink-2">
                   {e.lines.map((l) => (

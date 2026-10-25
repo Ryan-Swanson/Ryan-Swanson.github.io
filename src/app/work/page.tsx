@@ -5,8 +5,13 @@ import { projects } from "@/content/projects";
 
 export const metadata: Metadata = {
   title: "Work",
-  description: "Case studies for six products Ryan Swanson designed and built, with real screens and architecture notes.",
+  description: "Case studies for six products I designed and built, with real screens and architecture notes.",
   alternates: { canonical: "/work/" },
+  openGraph: {
+    title: "Work | Ryan Swanson",
+    description: "Case studies for six products I designed and built, with real screens and architecture notes.",
+    url: "/work/",
+  },
 };
 
 export default function WorkIndex() {
@@ -15,8 +20,8 @@ export default function WorkIndex() {
       <header className="max-w-[48rem] pt-12 pb-8">
         <h1 className="font-display text-5xl leading-none sm:text-7xl">Work</h1>
         <p className="mt-5 text-lg text-ink-2">
-          Six products I designed and built myself, from first idea to shipped software: live on the web, on the App Store,
-          available by arrangement, or in active development.
+          Six products I designed and built myself: two live on the web, one on the App Store, one available by arrangement,
+          and two in active development.
         </p>
       </header>
       {projects.map((p) => (

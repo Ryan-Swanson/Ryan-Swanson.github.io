@@ -9,14 +9,14 @@ export interface LoadProgress {
   compiled: boolean;
 }
 
-/** Overall progress: the 3D code, then the six screens, then the graphics. */
+/** Overall progress: the 3D code, then the first screens, then the graphics. */
 function fraction(p: LoadProgress) {
   return (p.code ? 0.3 : 0.05) + 0.5 * (p.total ? p.screens / p.total : 0) + (p.compiled ? 0.2 : 0);
 }
 
 function step(p: LoadProgress) {
   if (!p.code) return "Loading the 3D engine";
-  if (p.screens < p.total) return `Loading project screens, ${p.screens} of ${p.total}`;
+  if (p.screens < p.total) return "Loading the first screens";
   if (!p.compiled) return "Preparing the graphics";
   return "Ready";
 }

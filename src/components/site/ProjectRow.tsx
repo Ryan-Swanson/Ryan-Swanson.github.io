@@ -10,15 +10,16 @@ export function ProjectRow({ project, headingLevel = "h3" }: { project: Project;
   const narrow = project.hero.device === "phone" || project.hero.device === "watch";
   const live = primaryLink(project);
   return (
-    <article className="group relative grid gap-6 border-t border-rule py-10 md:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)] md:gap-12 lg:py-14">
-      <div className={`overflow-hidden border border-rule bg-wall-2 ${narrow ? "flex justify-center bg-[radial-gradient(ellipse_at_center,rgba(255,214,150,0.08),transparent_70%)] py-6" : ""}`}>
+    <article className="group relative grid gap-6 border-t border-rule py-10 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)] lg:gap-12 lg:py-14">
+      {/* self-start: the frame hugs the screenshot instead of stretching to the text column's height. */}
+      <div className={`self-start overflow-hidden border border-rule bg-wall-2 ${narrow ? "flex justify-center bg-[radial-gradient(ellipse_at_center,rgba(255,214,150,0.08),transparent_70%)] py-6" : ""}`}>
         <div className={narrow ? "w-[46%] max-w-[15rem]" : "w-full"}>
-          <Shot media={project.hero} figure={false} sizes="(min-width: 768px) 55vw, 100vw" />
+          <Shot media={project.hero} figure={false} sizes={narrow ? "(min-width: 768px) 15rem, 46vw" : "(min-width: 1024px) 55vw, 100vw"} />
         </div>
       </div>
       <div className="flex flex-col">
         <p className="label text-ink-2">
-          {project.kind}, {project.years}
+          {project.kind}, <span className="whitespace-nowrap">{project.years}</span>
         </p>
         <H className="mt-2 font-display text-4xl leading-none sm:text-5xl">
           <Link prefetch={false} href={`/work/${project.slug}/`} className="no-underline after:absolute after:inset-0 hover:text-brass">
@@ -26,7 +27,7 @@ export function ProjectRow({ project, headingLevel = "h3" }: { project: Project;
           </Link>
         </H>
         <p className="mt-4 max-w-[34rem] text-lg text-ink">{project.summary}</p>
-        <dl className="mt-6 grid max-w-[34rem] grid-cols-[6.5rem_1fr] gap-x-4 gap-y-2 text-[0.95rem]">
+        <dl className="mt-6 grid max-w-[34rem] grid-cols-[5rem_1fr] gap-x-3 gap-y-2 text-[0.95rem] sm:grid-cols-[6.5rem_1fr] sm:gap-x-4">
           <dt className="label pt-1 text-ink-2">Role</dt>
           <dd>{project.role}</dd>
           <dt className="label pt-1 text-ink-2">Medium</dt>

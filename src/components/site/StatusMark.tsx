@@ -12,8 +12,9 @@ export function StatusMark({ status, className = "" }: { status: Project["status
         ? "border-current"
         : "border-current border-dashed";
   return (
-    <span className={`inline-flex items-center gap-2 ${className}`}>
-      <span aria-hidden="true" className={`inline-block size-2.5 shrink-0 rounded-full border ${shape}`} />
+    // items-start keeps the mark beside the first line when a long label wraps.
+    <span className={`inline-flex items-start gap-2 ${className}`}>
+      <span aria-hidden="true" className={`mt-[0.45em] inline-block size-2.5 shrink-0 rounded-full border ${shape}`} />
       {status.label}
     </span>
   );

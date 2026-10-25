@@ -7,7 +7,7 @@ const navLink = "label inline-flex min-h-11 items-center px-1.5 no-underline hov
 export function Header() {
   return (
     <header className="relative z-20 mx-auto grid max-w-[90rem] grid-cols-[1fr_auto] items-center gap-x-4 px-4 pt-3 sm:flex sm:justify-between sm:px-8 sm:pt-6">
-      <Link prefetch={false} href="/" className="font-display text-xl tracking-tight no-underline sm:text-2xl">
+      <Link prefetch={false} href="/" className="inline-flex min-h-11 items-center font-display text-xl tracking-tight no-underline sm:text-2xl">
         Ryan Swanson
       </Link>
       <div className="sm:order-last">

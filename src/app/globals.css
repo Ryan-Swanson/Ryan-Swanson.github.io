@@ -1,5 +1,18 @@
 @import "tailwindcss";
 
+/* Tour layout: screen beside its label on wide screens and on landscape tablets and phones.
+   Keep this query in sync with WIDE_TOUR in src/components/world/Experience.tsx. */
+@custom-variant wide {
+  @media (min-width: 1024px) {
+    @slot;
+  }
+  @media (orientation: landscape) and (min-width: 640px) and (min-aspect-ratio: 6/5) {
+    @slot;
+  }
+}
+/* Short viewports (phones in landscape): tighter type and compact wall labels. */
+@custom-variant short (@media (max-height: 520px));
+
 /*
   Gallery palette. Dark-first: deep green-black gallery walls, warm paper ink,
   brass for focus and status, and cream wall labels for each piece.

@@ -76,8 +76,11 @@ export function buildRig(screens: ScreenPlacement[], viewAspect: number, fovDeg:
     pos.push(pathPoint(midZ, 0.55));
     tgt.push(pathPoint(midZ - 14, 0.1));
 
-    const fillW = narrow ? 0.9 : 0.44;
-    const fillH = narrow ? 0.34 : 0.52;
+    // Phones in landscape (very wide, short views) get a looser fit so the hardware around the
+    // screen stays clear of the wall label on the right.
+    const veryWide = !narrow && viewAspect > 1.9;
+    const fillW = narrow ? 0.9 : veryWide ? 0.38 : 0.44;
+    const fillH = narrow ? 0.34 : veryWide ? 0.44 : 0.52;
     const extra = narrow ? 0 : (s.extraRight ?? 0);
     // Hardware beside the screen widens the shot a little and pans it, rather than pulling the
     // camera far back (which would put it behind the motif's walls).

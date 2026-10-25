@@ -34,13 +34,16 @@ src/app/            routes: /, /work/, /work/[slug]/, /about/, 404
 src/components/site shared UI: header, footer, wall label (Placard), screenshots (Shot)
 src/components/world
   Experience.tsx    pinned stage, scrolling wall labels, stop index, free roam, fallback
+  Loader.tsx        loading screen shown while the 3D tour starts (always skippable)
+  ThreeCanvas.tsx   R3F root that registers only the three.js classes the scene uses
   World.tsx         the scene: field pass, depth composite, screens, dust, camera, post, quality tiers
+  Props.tsx         hardware around each screen (amp and guitar, desks, all-in-one, phone, laptop)
   fieldShader.ts    raymarched world (one motif per project) and the composite shader
   path.ts           flight path, screen placement, camera keyframes
   store.ts          shared per-frame state between the page and the scene
 public/media/       optimized screenshots (WebP, two widths plus a scene texture)
 public/*.html       redirect pages for links from the old site
-scripts/            media optimizer and the Pages-like static server
+scripts/            media optimizer, Pages-like static server, post-build 3D preload injector
 tests/              Playwright tests
 ```
 
@@ -52,12 +55,12 @@ The home page section is a tall scroll container. A stage is pinned to the viewp
 
 The world itself is a signed-distance field raymarched into a low-resolution half-float target, then composited under the rasterized screens with correct depth, so geometry and screens sort against each other. Each project has a motif built from its own logic:
 
-- fr3t.app: six vibrating strings over equal-tempered frets; C major scale tones glow by pitch class
-- InputShare: clusters of displays with a cursor of light crossing between machines
-- learncenter.dev: walls of page blocks with call-to-action accents
-- TalkMac: a tunnel of ribs driven by a speech-like envelope
-- ProTuner: rings that wobble out of tune far away and settle into circles at the station
-- GrooveMind: a 7/8 step grid accented 3+2+2, with a moving playhead
+- fr3t.app: a fretboard with equal-tempered frets; a C major run climbs the neck and comes back down
+- InputShare: two computers; an arch of light forms between them and carries packets and the cursor
+- learncenter.dev: a growth chart whose padlocks unlock as the bars rise
+- TalkMac: a speaking head in profile; its waveform travels into a computer that types the words
+- ProTuner: waveform rings that beat out of tune far away and settle near the station
+- GrooveMind: a 7/8 piano roll accented 3+2+2, a keyboard riding the playhead, and LED spectrum walls
 
 Screens light the world in their own average color and "power on" with a scanline front as the camera approaches. Bloom, chromatic aberration, grain, and vignette run through `postprocessing`. Screen colors are not tone-mapped, so captures stay accurate.
 
@@ -65,7 +68,19 @@ Free roam (button in the stage) switches to a full-screen view: drag to look, W 
 
 ### Loading and quality
 
-The page paints a static poster first (the LCP element). After `load` and an idle period the page checks WebGL. Desktops boot the world right away; phones and touch devices boot it on the first scroll, touch, or key press. With Save-Data the world waits for a button press. Shaders compile asynchronously before the canvas fades in.
+A loading screen (in the server HTML, hidden without JavaScript, always skippable) covers the tour while the 3D starts. With Save-Data the world waits for a button press instead, and without usable GPU WebGL the page shows still screens.
+
+What keeps the start fast, especially on phones:
+
+- The 3D chunk is preloaded from the HTML by `scripts/preload-world.mjs` (it runs after `next build`), and the first two screens' textures are preloaded too. On phones the poster image and the texture are the same file, fetched once.
+- `ThreeCanvas` registers only the elements the scene uses, so the bundler drops the rest of three.js.
+- The tour opens once the first two screens are in and everything is compiled; the other screens stream in behind it.
+- Each station's hardware is built one per frame, and shaders compile in steps with a frame between each, so no single task freezes the page. Average screen colors are computed with `createImageBitmap`, off the main thread.
+- Materials, the keyboard texture, and two glow lights are shared across stations.
+
+To profile, build with `SOURCEMAPS=1 npm run build` so stack traces map back to the source.
+
+The tour layout follows the viewport's shape: portrait screens put the screen above its label, while desktops and landscape tablets and phones put it beside the label (the `wide` variant in `globals.css`). Short viewports get compact labels (`short`).
 
 Four quality tiers set the field resolution, raymarch steps, pixel ratio, particle count, and effects. The scene starts at a tier chosen for the device and moves up or down every 1.5 s based on measured frame rate. Rendering stops when the section is off screen or the tab is hidden, and GPU resources are disposed on unmount. If WebGL is missing, fails, or loses its context, the stage shows still screens that crossfade with the same scroll story.
 

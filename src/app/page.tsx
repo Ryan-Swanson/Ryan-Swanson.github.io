@@ -8,27 +8,38 @@ import { projects } from "@/content/projects";
 export default function Home() {
   const intro = (
     <>
-      <h1 id="intro-title" className="font-display text-[2.5rem] leading-[1.04] tracking-[-0.01em] sm:text-[3.4rem] xl:text-[3.9rem]">
+      <h1 id="intro-title" className="font-display text-[2.5rem] leading-[1.04] tracking-[-0.01em] sm:text-[3.4rem] xl:text-[3.9rem] short:text-[2rem]">
         I&rsquo;m Ryan Swanson. I build software <em className="text-brass">end to end.</em>
       </h1>
-      <p className="mt-5 max-w-[32rem] text-lg leading-relaxed text-ink-2">{profile.headline}</p>
-      <div className="mt-6 flex flex-wrap gap-3">
+      <p className="mt-5 max-w-[32rem] text-lg leading-relaxed text-ink-2 short:mt-2 short:text-base">{profile.headline}</p>
+      <div className="mt-6 flex flex-wrap gap-3 short:mt-3">
         <a href="#work" className="inline-flex min-h-11 items-center bg-placard px-5 font-medium text-placard-ink no-underline hover:bg-brass">
-          Jump to the list
+          See the work
         </a>
         <Link prefetch={false} href="/about/" className="inline-flex min-h-11 items-center border border-rule px-5 no-underline hover:border-brass hover:text-brass">
           About me
         </Link>
       </div>
-      <p className="label mt-10 flex items-center gap-3 text-ink-2">
+      <p className="label mt-10 flex items-center gap-3 text-ink-2 short:hidden">
         <span aria-hidden="true" className="inline-block h-8 w-px bg-brass" />
-        Scroll to fly through six projects, or jump to the list.
+        Scroll to fly through six projects, or see them as a list.
       </p>
     </>
   );
 
+  // The tour opens once the first two screens are in, so start those downloads from the HTML,
+  // in the size each device will use, instead of waiting for the 3D code to ask for them.
+  // Phones use the 800 px file that the poster image already preloads; desktops use a separate texture.
+  const textureHints = projects.slice(0, 2).map((p) => ({
+    href: p.hero.texture?.src ?? `${p.hero.src}-${p.hero.widths.at(-1)}.webp`,
+    media: "(min-width: 1024px)",
+  }));
+
   return (
     <>
+      {textureHints.map((t) => (
+        <link key={t.href} rel="preload" as="image" href={t.href} media={t.media} crossOrigin="anonymous" fetchPriority="low" />
+      ))}
       <Experience projects={projects.map(toWallProject)} intro={intro} />
 
       <section id="work" aria-labelledby="work-title" className="mx-auto max-w-[90rem] px-4 pt-20 sm:px-8 lg:pt-28">

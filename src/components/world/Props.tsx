@@ -27,7 +27,6 @@ export interface PropArgs {
   h: number;
   /** Seconds of world time; frozen when motion is off. */
   clock: { current: { time: number } };
-  glow: THREE.Color;
 }
 
 // ---------- shared helpers ------------------------------------------------------
@@ -83,9 +82,17 @@ export function useStudioEnvironment(gl: THREE.WebGLRenderer, scene: THREE.Scene
   }, [gl, scene, intensity]);
 }
 
-function useKit() {
-  return useMemo(() => {
-    const m = {
+type Kit = Record<
+  | "black" | "matte" | "alu" | "darkAlu" | "titanium" | "chrome" | "oak" | "walnut" | "ceramic"
+  | "leaf" | "leafLight" | "terracotta" | "brass" | "rubber" | "cone" | "cream",
+  THREE.MeshStandardMaterial
+>;
+let kitCache: Kit | null = null;
+/** Shared materials: every station uses the same kit, so each shader variant is built once. */
+function getKit(): Kit {
+  if (kitCache) return kitCache;
+  {
+    const m: Kit = {
       black: new THREE.MeshStandardMaterial({ color: "#0b0c0d", roughness: 0.45, metalness: 0.4 }),
       matte: new THREE.MeshStandardMaterial({ color: "#16181a", roughness: 0.85 }),
       alu: new THREE.MeshStandardMaterial({ color: "#b9bcc0", roughness: 0.32, metalness: 0.85 }),
@@ -104,8 +111,12 @@ function useKit() {
       cone: new THREE.MeshStandardMaterial({ color: "#f2c20f", roughness: 0.6, metalness: 0.05, side: THREE.DoubleSide }),
       cream: new THREE.MeshStandardMaterial({ color: "#efe6d2", roughness: 0.5 }),
     };
+    kitCache = m;
     return m;
-  }, []);
+  }
+}
+function useKit(): Kit {
+  return useMemo(() => getKit(), []);
 }
 
 /** Same speech envelope as the TalkMac field motif. */
@@ -175,8 +186,11 @@ function Mouse({ k }: { k: ReturnType<typeof useKit> }) {
   );
 }
 
+let keyboardCache: THREE.CanvasTexture | null = null;
+/** One keyboard texture shared by every desk in the scene. */
 function keyboardTexture() {
-  return canvasTexture(512, 160, (g) => {
+  if (keyboardCache) return keyboardCache;
+  keyboardCache = canvasTexture(512, 160, (g) => {
     g.fillStyle = "#202226";
     g.fillRect(0, 0, 512, 160);
     const rows = 5;
@@ -192,6 +206,7 @@ function keyboardTexture() {
       }
     }
   });
+  return keyboardCache;
 }
 
 // ---------- fr3t.app: amp and guitar ------------------------------------------------
@@ -1075,12 +1090,11 @@ function Groove({ w, h, k }: { w: number; h: number; k: ReturnType<typeof useKit
 
 // ---------- entry ----------------------------------------------------------------------------------
 
-export function ScreenProps({ slug, w, h, clock, glow }: PropArgs) {
+export function ScreenProps({ slug, w, h, clock }: PropArgs) {
   const k = useKit();
   return (
     <group>
-      {/* Screen glow spilling onto the hardware in front of it. */}
-      <pointLight position={[0, -0.2, 1.4]} color={glow} intensity={2.4} distance={7} decay={2} />
+      {/* Screen glow on the hardware comes from two shared lights that follow the camera (World.tsx). */}
       {slug === "fr3t-app" && <Fr3t w={w} h={h} k={k} />}
       {slug === "inputshare" && <InputShare w={w} h={h} clock={clock} k={k} />}
       {slug === "learncenter-dev" && <Office w={w} h={h} k={k} />}

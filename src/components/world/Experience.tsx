@@ -12,6 +12,9 @@ import { createWorldStore, type QualityTier, type WorldProject } from "./store";
 
 const loadWorld = () => import("./World");
 const World = dynamic(loadWorld, { ssr: false });
+// Start fetching the 3D code as soon as this script runs in the browser, before hydration
+// finishes; the import below resolves from the same request.
+if (typeof window !== "undefined" && !new URLSearchParams(window.location.search).has("no3d")) void loadWorld().catch(() => undefined);
 
 /**
  * idle: deciding. manual: 3D available on request (Save-Data). loading/ready:
@@ -48,6 +51,9 @@ const KEYMAP: Record<string, string> = {
   ShiftLeft: "down",
 };
 
+/** Same query as the `wide` variant in globals.css. */
+const WIDE_TOUR = "(min-width: 1024px), (orientation: landscape) and (min-width: 640px) and (min-aspect-ratio: 6/5)";
+
 function startTier(narrow: boolean): QualityTier {
   const cores = navigator.hardwareConcurrency ?? 4;
   if (narrow) return cores >= 6 ? 1 : 0;
@@ -66,6 +72,15 @@ export function Experience({ projects, intro }: { projects: WallProject[]; intro
   const [active, setActive] = useState(true);
   const [stop, setStop] = useState(0);
   const [narrow, setNarrow] = useState(false);
+  // Phone-sized screens load the smaller textures and cap the quality tier, whatever the orientation.
+  const [small, setSmall] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 1023px)");
+    const update = () => setSmall(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
   const [tier, setTier] = useState<QualityTier>(2);
   const [roam, setRoam] = useState(false);
   const [hovered, setHovered] = useState<string | null>(null);
@@ -87,8 +102,9 @@ export function Experience({ projects, intro }: { projects: WallProject[]; intro
   }, [motion]);
 
   useEffect(() => {
-    const mq = window.matchMedia("(max-width: 1023px)");
-    const update = () => setNarrow(mq.matches);
+    // "narrow" frames the screen above its label; landscape phones and tablets use the side-by-side tour.
+    const mq = window.matchMedia(WIDE_TOUR);
+    const update = () => setNarrow(!mq.matches);
     update();
     mq.addEventListener("change", update);
     return () => mq.removeEventListener("change", update);
@@ -280,22 +296,25 @@ export function Experience({ projects, intro }: { projects: WallProject[]; intro
             Math.abs(i - posterIndex) <= 1 ? (
               <div
                 key={p.slug}
-                className={`absolute left-1/2 top-[12%] w-[80%] -translate-x-1/2 transition-opacity duration-500 lg:top-1/2 lg:w-[50%] lg:-translate-y-1/2 lg:translate-x-0 ${
-                  stop === 0 ? "lg:left-[46%]" : "lg:left-[6%]"
+                className={`absolute left-1/2 top-[12%] w-[80%] -translate-x-1/2 transition-opacity duration-500 wide:top-1/2 wide:w-[50%] wide:-translate-y-1/2 wide:translate-x-0 ${
+                  stop === 0 ? "wide:left-[46%]" : "wide:left-[6%]"
                 } ${
                   i === posterIndex ? "opacity-100" : "opacity-0"
-                } ${p.hero.device === "phone" ? "max-w-[15rem] lg:max-w-[17rem]" : ""}`}
+                } ${p.hero.device === "phone" ? "max-w-[15rem] wide:max-w-[17rem]" : ""}`}
               >
                 <div className={`border-[6px] border-[#0c100e] shadow-[0_40px_80px_-30px_rgba(0,0,0,0.85)] ${stop === 0 ? "opacity-60" : ""}`}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={`${p.hero.src}-${p.hero.widths.at(-1)}.webp`}
                     srcSet={p.hero.widths.map((w) => `${p.hero.src}-${w}.webp ${w}w`).join(", ")}
-                    sizes="(min-width: 1024px) 50vw, 80vw"
+                    // On phones this matches the 800 px scene texture, so the poster and the texture share one download.
+                    sizes="(min-width: 1024px) 50vw, 300px"
                     width={p.hero.width}
                     height={p.hero.height}
                     alt={p.hero.alt}
                     fetchPriority={i === 0 ? "high" : "auto"}
+                    // Same CORS mode as the 3D texture loader, so the poster and the texture share one download.
+                    crossOrigin="anonymous"
                     className="block h-auto w-full"
                   />
                 </div>
@@ -311,6 +330,7 @@ export function Experience({ projects, intro }: { projects: WallProject[]; intro
                 projects={worldProjects}
                 store={store.current}
                 narrow={narrow}
+                small={small}
                 active={active || roam}
                 initialTier={tier}
                 onReady={onReady}
@@ -328,7 +348,7 @@ export function Experience({ projects, intro }: { projects: WallProject[]; intro
         {/* Legibility gradients over the world. */}
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_top,rgba(14,19,17,0.85)_0%,transparent_26%)] lg:bg-[linear-gradient(to_right,rgba(19,26,23,0.75)_0%,transparent_40%),linear-gradient(to_top,rgba(14,19,17,0.85)_0%,transparent_22%)]"
+          className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_top,rgba(14,19,17,0.85)_0%,transparent_26%)] wide:bg-[linear-gradient(to_right,rgba(19,26,23,0.75)_0%,transparent_40%),linear-gradient(to_top,rgba(14,19,17,0.85)_0%,transparent_22%)]"
         />
 
         {!roam && (
@@ -374,9 +394,9 @@ export function Experience({ projects, intro }: { projects: WallProject[]; intro
                     </li>
                   ))}
                 </ol>
-                <p className="label mt-2 flex items-center justify-between text-ink-2 lg:hidden">
+                <p className="label mt-1 flex items-center justify-between text-ink-2 lg:hidden">
                   <span>{current ? `${stop} of ${projects.length}: ${current.title}` : "Scroll to fly through the work"}</span>
-                  <a href="#work" className="underline">
+                  <a href="#work" className="-mr-2 inline-flex min-h-11 items-center px-2 underline">
                     List view
                   </a>
                 </p>
@@ -431,7 +451,7 @@ export function Experience({ projects, intro }: { projects: WallProject[]; intro
 
       {/* The scrolling story: real HTML that the camera follows. */}
       <div className={`pointer-events-none relative -mt-[100svh] ${roam ? "invisible" : ""}`}>
-        <div className="flex h-[100svh] flex-col justify-center px-4 pb-24 sm:px-8">
+        <div className="flex h-[100svh] flex-col justify-center px-4 pb-24 sm:px-8 short:pb-10">
           <div className="mx-auto w-full max-w-[90rem]">
             <div className="pointer-events-auto max-w-[36rem] [text-shadow:0_1px_14px_rgba(8,12,10,0.95),0_0_2px_rgba(8,12,10,0.8)]">{intro}</div>
           </div>
@@ -441,10 +461,10 @@ export function Experience({ projects, intro }: { projects: WallProject[]; intro
             key={p.slug}
             id={p.slug}
             aria-label={p.title}
-            className="flex h-[100svh] items-end px-4 pb-28 sm:px-8 lg:items-center lg:pb-0"
+            className="flex h-[100svh] items-end px-4 pb-28 sm:px-8 wide:items-center wide:pb-0"
           >
-            <div className="mx-auto flex w-full max-w-[90rem] justify-center lg:justify-end">
-              <Placard project={p} as="h2" className="pointer-events-auto w-full max-w-[26rem] lg:w-[24rem]" />
+            <div className="mx-auto flex w-full max-w-[90rem] justify-center wide:justify-end">
+              <Placard project={p} as="h2" compact className="pointer-events-auto w-full max-w-[26rem] wide:w-[24rem] short:wide:w-[21rem]" />
             </div>
           </article>
         ))}

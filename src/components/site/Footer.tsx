@@ -8,7 +8,7 @@ export function Footer() {
         <div>
           <h2 className="font-display text-3xl sm:text-4xl">Get in touch</h2>
           <p className="mt-3 max-w-[36rem] text-ink-2">
-            The best way to reach me is a message on LinkedIn. My public code and activity are on GitHub.
+            The best way to reach me is a message on LinkedIn. My product repositories are private; GitHub has older public projects and this site&rsquo;s source.
           </p>
           <ul className="mt-6 flex flex-wrap gap-3">
             {profile.links.map((l) => (
@@ -28,10 +28,9 @@ export function Footer() {
         <div className="text-ink-2 md:justify-self-end md:text-right">
           <p>{profile.name}</p>
           <p>{profile.location}</p>
-          <p className="mt-4">
-            <Link prefetch={false} href="/work/" className="hover:text-brass">All work</Link>
-            {" · "}
-            <Link prefetch={false} href="/about/" className="hover:text-brass">About</Link>
+          <p className="mt-3 flex gap-4 md:justify-end">
+            <Link prefetch={false} href="/work/" className="inline-flex min-h-11 items-center hover:text-brass">All work</Link>
+            <Link prefetch={false} href="/about/" className="inline-flex min-h-11 items-center hover:text-brass">About</Link>
           </p>
         </div>
       </div>

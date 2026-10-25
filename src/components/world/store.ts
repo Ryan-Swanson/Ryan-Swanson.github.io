@@ -39,7 +39,10 @@ export type QualityTier = 0 | 1 | 2 | 3;
 export interface WorldProps {
   projects: WorldProject[];
   store: WorldStore;
+  /** Portrait-style tour framing: the screen above its label. */
   narrow: boolean;
+  /** Phone-sized screen: smaller textures and a lower quality cap. */
+  small: boolean;
   active: boolean;
   initialTier: QualityTier;
   onReady: () => void;

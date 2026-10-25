@@ -1,6 +1,6 @@
 "use client";
 
-import { Canvas, useFrame, useThree, type ThreeEvent } from "@react-three/fiber";
+import { useFrame, useThree, type ThreeEvent } from "@react-three/fiber";
 import {
   BlendFunction,
   BloomEffect,
@@ -17,6 +17,7 @@ import { compositeFragment, fieldFragment, fieldVertex } from "./fieldShader";
 import { buildRig, dwell, INTRO_Z, pathXY, placeScreen, STATION_SPACING, stationZ, type ScreenPlacement } from "./path";
 import { ScreenProps, useStudioEnvironment } from "./Props";
 import { revealAt, screenFragment, screenVertex } from "./screenShader";
+import { ThreeCanvas } from "./ThreeCanvas";
 import type { QualityTier, WorldProps, WorldProject } from "./store";
 
 /* Quality tiers. The scene starts at a tier chosen for the device and moves
@@ -117,29 +118,42 @@ interface LoadedScreen {
   color: THREE.Color;
 }
 
-/** Average a texture's image into one color for the light it casts on the world. */
-function averageColor(image: CanvasImageSource): THREE.Color {
-  const c = document.createElement("canvas");
-  c.width = c.height = 8;
-  const g = c.getContext("2d", { willReadFrequently: true });
-  if (!g) return new THREE.Color(0.3, 0.3, 0.3);
-  g.drawImage(image, 0, 0, 8, 8);
-  const d = g.getImageData(0, 0, 8, 8).data;
-  let r = 0,
-    gr = 0,
-    b = 0;
-  for (let i = 0; i < d.length; i += 4) {
-    r += d[i]!;
-    gr += d[i + 1]!;
-    b += d[i + 2]!;
+/**
+ * Average a screen capture into one color for the light it casts on the world. The browser
+ * downsizes the image to 8 by 8 off the main thread, so a 2048 px capture costs almost nothing here.
+ */
+async function averageColor(image: HTMLImageElement | ImageBitmap): Promise<THREE.Color> {
+  const fallback = new THREE.Color(0.3, 0.3, 0.3);
+  try {
+    const small = await createImageBitmap(image, { resizeWidth: 8, resizeHeight: 8, resizeQuality: "low" });
+    const c = document.createElement("canvas");
+    c.width = c.height = 8;
+    const g = c.getContext("2d", { willReadFrequently: true });
+    if (!g) return fallback;
+    g.drawImage(small, 0, 0);
+    small.close();
+    const d = g.getImageData(0, 0, 8, 8).data;
+    let r = 0,
+      gr = 0,
+      b = 0;
+    for (let i = 0; i < d.length; i += 4) {
+      r += d[i]!;
+      gr += d[i + 1]!;
+      b += d[i + 2]!;
+    }
+    const n = d.length / 4;
+    const col = new THREE.Color().setRGB(r / n / 255, gr / n / 255, b / n / 255, THREE.SRGBColorSpace);
+    // Screens are mostly dark UI; lift the hue so the cast light reads.
+    const hsl = { h: 0, s: 0, l: 0 };
+    col.getHSL(hsl);
+    return col.setHSL(hsl.h, Math.min(1, hsl.s * 1.6 + 0.15), 0.42);
+  } catch {
+    return fallback;
   }
-  const n = d.length / 4;
-  const col = new THREE.Color().setRGB(r / n / 255, gr / n / 255, b / n / 255, THREE.SRGBColorSpace);
-  // Screens are mostly dark UI; lift the hue so the cast light reads.
-  const hsl = { h: 0, s: 0, l: 0 };
-  col.getHSL(hsl);
-  return col.setHSL(hsl.h, Math.min(1, hsl.s * 1.6 + 0.15), 0.42);
 }
+
+/** The loading screen waits for this many screens; the rest stream in behind the tour. */
+const SCREENS_BEFORE_READY = 2;
 
 function useScreens(projects: WorldProject[], narrow: boolean, onError: (r: string) => void) {
   const [loaded, setLoaded] = useState<(LoadedScreen | null)[]>(() => projects.map(() => null));
@@ -163,12 +177,14 @@ function useScreens(projects: WorldProject[], narrow: boolean, onError: (r: stri
           tex.colorSpace = THREE.SRGBColorSpace;
           tex.anisotropy = aniso;
           textures.push(tex);
-          const color = averageColor(tex.image as CanvasImageSource);
-          setLoaded((prev) => prev.map((s, k) => (k === i ? { texture: tex, color } : s)));
-          setSettled((n) => n + 1);
+          return averageColor(tex.image as HTMLImageElement).then((color) => {
+            if (cancelled) return;
+            setLoaded((prev) => prev.map((s, k) => (k === i ? { texture: tex, color } : s)));
+            if (i < SCREENS_BEFORE_READY) setSettled((n) => n + 1);
+          });
         })
         .catch(() => {
-          setSettled((n) => n + 1);
+          if (i < SCREENS_BEFORE_READY) setSettled((n) => n + 1);
           if (i === 0) onError("texture");
         });
     });
@@ -189,6 +205,7 @@ function Screen({
   loaded,
   material,
   clock,
+  withProps,
   onOpen,
   onHover,
 }: {
@@ -197,12 +214,13 @@ function Screen({
   loaded: LoadedScreen | null;
   material: THREE.ShaderMaterial;
   clock: { current: { time: number } };
+  /** Props are built one station per frame at startup so no single task stalls the page. */
+  withProps: boolean;
   onOpen: (slug: string) => void;
   onHover: (slug: string | null) => void;
 }) {
   const group = useRef<THREE.Group>(null);
   const rimColor = useMemo(() => (loaded ? loaded.color.clone().multiplyScalar(2.1) : new THREE.Color(0.2, 0.2, 0.2)), [loaded]);
-  const glow = useMemo(() => (loaded ? loaded.color.clone() : new THREE.Color(0.3, 0.3, 0.3)), [loaded]);
   const floating = slug === "protuner";
   // Monitors get a glowing rim; the phone, the laptop, and the all-in-one have their own housings.
   const monitor = !floating && slug !== "groovemind" && slug !== "talkmac";
@@ -259,13 +277,13 @@ function Screen({
       >
         <planeGeometry args={[w, h]} />
       </mesh>
-      <ScreenProps slug={slug} w={w} h={h} clock={clock} glow={glow} />
+      {withProps && <ScreenProps slug={slug} w={w} h={h} clock={clock} />}
     </group>
   );
 }
 
 function Scene(props: WorldProps) {
-  const { projects, store, narrow, onReady, onProgress, onError, onOpen, onHover, onRoamExit, exitRoamRef, initialTier } = props;
+  const { projects, store, narrow, small, onReady, onProgress, onError, onOpen, onHover, onRoamExit, exitRoamRef, initialTier } = props;
   const gl = useThree((s) => s.gl);
   const scene = useThree((s) => s.scene);
   const camera = useThree((s) => s.camera) as THREE.PerspectiveCamera;
@@ -275,8 +293,19 @@ function Scene(props: WorldProps) {
   // Reflections for the props' metal and lacquer. The raymarched field does its own lighting.
   useStudioEnvironment(gl, scene);
   const [hovered, setHovered] = useState<string | null>(null);
-  const { loaded, settled } = useScreens(projects, narrow, onError);
+  const { loaded, settled } = useScreens(projects, small, onError);
   const [compiled, setCompiled] = useState(false);
+  // Build one station's hardware per frame, then compile everything once it is all in the scene.
+  const [propsMounted, setPropsMounted] = useState(0);
+  useEffect(() => {
+    if (propsMounted >= projects.length) return;
+    const raf = requestAnimationFrame(() => setPropsMounted((n) => n + 1));
+    return () => cancelAnimationFrame(raf);
+  }, [propsMounted, projects.length]);
+  const allProps = propsMounted >= projects.length;
+  // Two shared lights carry the nearest screens' glow onto their hardware.
+  const glowA = useRef<THREE.PointLight>(null);
+  const glowB = useRef<THREE.PointLight>(null);
 
   const placements = useMemo(
     () =>
@@ -284,6 +313,8 @@ function Scene(props: WorldProps) {
         const placement = placeScreen(i, p.texture.width / p.texture.height);
         // InputShare's Windows laptop sits to the right of the Mac screen; keep both in frame.
         if (p.slug === "inputshare") placement.extraRight = 2.6;
+        // TalkMac's all-in-one is wider than its screen and has a desk mic to the right.
+        if (p.slug === "talkmac") placement.extraRight = 1.1;
         return placement;
       }),
     [projects],
@@ -440,23 +471,38 @@ function Scene(props: WorldProps) {
 
   // Compile every shader before revealing the canvas, so the first frames do not stall. This
   // starts at mount, in parallel with the screen downloads; screens power on as they arrive.
+  // The field shader is the slowest to compile, so it starts at mount; the props compile once built.
+  // WebGL translates shaders on the main thread, so compile in steps with a frame between each:
+  // the field shader first, then each station's hardware, so no single task freezes the page.
   useEffect(() => {
+    if (!allProps) return;
     let cancelled = false;
-    Promise.all([gl.compileAsync(field.scene, field.cam), gl.compileAsync(scene, camera)])
-      .catch(() => undefined)
-      .then(() => {
-        if (!cancelled) setCompiled(true);
-      });
+    const frame = () => new Promise<void>((r) => requestAnimationFrame(() => r()));
+    (async () => {
+      try {
+        await gl.compileAsync(field.scene, field.cam);
+        for (const child of [...scene.children]) {
+          if (cancelled) return;
+          await frame();
+          await gl.compileAsync(child, camera, scene);
+        }
+      } catch {
+        // A failed precompile only means the shader compiles on first use instead.
+      }
+      if (!cancelled) setCompiled(true);
+    })();
     return () => {
       cancelled = true;
     };
-  }, [gl, field, scene, camera]);
+  }, [allProps, gl, field, scene, camera]);
 
-  // Report progress to the loading screen, and reveal only once everything is in place.
+  // Report progress to the loading screen. The tour opens once the first screens are in and
+  // everything is compiled; the remaining screens power on as they arrive.
+  const need = Math.min(SCREENS_BEFORE_READY, projects.length);
   useEffect(() => {
-    onProgress({ screens: settled, total: projects.length, compiled });
-    if (compiled && settled >= projects.length) onReady();
-  }, [compiled, settled, projects.length, onProgress, onReady]);
+    onProgress({ screens: settled, total: need, compiled });
+    if (compiled && settled >= need) onReady();
+  }, [compiled, settled, need, onProgress, onReady]);
 
   // A lost GPU context ends the 3D view; the page falls back to the static stage.
   useEffect(() => {
@@ -619,9 +665,18 @@ function Scene(props: WorldProps) {
       .sort((x, y) => x[1] - y[1]);
     for (let j = 0; j < 2; j++) {
       const i = order[j]?.[0] ?? 0;
-      (u.uScreenPos!.value as THREE.Vector3[])[j]!.copy(placements[i]!.center);
+      const pl = placements[i]!;
+      (u.uScreenPos!.value as THREE.Vector3[])[j]!.copy(pl.center);
       const c = loaded[i]?.color;
       (u.uScreenCol!.value as THREE.Vector3[])[j]!.set(c?.r ?? 0, c?.g ?? 0, c?.b ?? 0);
+      // Same screens light their own hardware: just in front of and below each screen's center.
+      const light = (j === 0 ? glowA : glowB).current;
+      if (light) {
+        light.position.copy(pl.center).addScaledVector(pl.normal, 1.4);
+        light.position.y -= 0.2;
+        if (c) light.color.copy(c);
+        else light.color.setRGB(0.3, 0.3, 0.3);
+      }
     }
 
     // Screens power on as the camera approaches.
@@ -651,7 +706,7 @@ function Scene(props: WorldProps) {
       s.frames = 0;
       s.frameTime = 0;
       const t = tierRef.current;
-      const cap: QualityTier = narrow ? 2 : 3;
+      const cap: QualityTier = small ? 2 : 3;
       if (fps < 50 && t > 0) {
         s.goodWindows = 0;
         applyTier((t - 1) as QualityTier);
@@ -682,6 +737,8 @@ function Scene(props: WorldProps) {
       <hemisphereLight args={["#cdd8f0", "#1a140e", 0.55]} />
       <directionalLight position={[3, 8, 6]} intensity={1.1} color="#fff1dc" />
       <directionalLight position={[-6, 3, -4]} intensity={0.5} color="#9fb4ff" />
+      <pointLight ref={glowA} intensity={2.4} distance={7} decay={2} />
+      <pointLight ref={glowB} intensity={2.4} distance={7} decay={2} />
       {placements.map((p, i) => (
         <Screen
           key={projects[i]!.slug}
@@ -690,6 +747,7 @@ function Scene(props: WorldProps) {
           loaded={loaded[i] ?? null}
           material={screenMaterials[i]!}
           clock={st}
+          withProps={i < propsMounted}
           onOpen={onOpen}
           onHover={hover}
         />
@@ -701,7 +759,7 @@ function Scene(props: WorldProps) {
 
 export default function World(props: WorldProps) {
   return (
-    <Canvas
+    <ThreeCanvas
       flat
       frameloop={props.active ? "always" : "never"}
       dpr={TIERS[props.initialTier].dpr}
@@ -711,10 +769,8 @@ export default function World(props: WorldProps) {
         // The InputShare pointer is clipped at each screen's edge.
         gl.localClippingEnabled = true;
       }}
-      aria-hidden="true"
-      tabIndex={-1}
     >
       <Scene {...props} />
-    </Canvas>
+    </ThreeCanvas>
   );
 }

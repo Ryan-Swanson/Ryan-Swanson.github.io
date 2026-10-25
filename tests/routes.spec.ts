@@ -102,7 +102,7 @@ test.describe("static routes", () => {
     await page.goto("/");
     await skipLoader(page);
     await expect(page.getByRole("status").filter({ hasText: "Building the gallery" })).toBeHidden({ timeout: 20_000 });
-    await page.getByRole("link", { name: "Jump to the list" }).click();
+    await page.getByRole("link", { name: "See the work" }).click();
     await expect(page).toHaveURL(/#work$/);
   });
 

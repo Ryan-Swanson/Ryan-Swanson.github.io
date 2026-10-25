@@ -8,6 +8,8 @@ const nextConfig: NextConfig = {
   trailingSlash: true,
   images: { unoptimized: true },
   reactStrictMode: true,
+  // SOURCEMAPS=1 npm run build emits browser source maps for local profiling only.
+  productionBrowserSourceMaps: process.env.SOURCEMAPS === "1",
 };
 
 export default nextConfig;

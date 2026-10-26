@@ -227,27 +227,40 @@ export function Experience({ projects, intro }: { projects: WallProject[]; intro
     };
   }, [roam]);
 
+  // Drag to look in free roam. Moves are tracked on the window rather than with pointer capture on
+  // the stage, which would retarget the click away from the Exit button and the scene's screens.
   const drag = useRef<{ x: number; y: number } | null>(null);
-  const onPointerDown = (e: React.PointerEvent) => {
+  useEffect(() => {
     if (!roam) return;
-    drag.current = { x: e.clientX, y: e.clientY };
-    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
-  };
-  const onPointerMove = (e: React.PointerEvent) => {
-    const el = stageRef.current;
-    if (!el) return;
-    if (roam && drag.current) {
+    const move = (e: PointerEvent) => {
+      if (!drag.current) return;
       store.current.roam.look.x += e.clientX - drag.current.x;
       store.current.roam.look.y += e.clientY - drag.current.y;
       drag.current = { x: e.clientX, y: e.clientY };
-    } else if (e.pointerType === "mouse") {
-      const r = el.getBoundingClientRect();
-      store.current.pointer.x = ((e.clientX - r.left) / r.width) * 2 - 1;
-      store.current.pointer.y = -(((e.clientY - r.top) / r.height) * 2 - 1);
-    }
+    };
+    const end = () => {
+      drag.current = null;
+    };
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", end);
+    window.addEventListener("pointercancel", end);
+    return () => {
+      drag.current = null;
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", end);
+      window.removeEventListener("pointercancel", end);
+    };
+  }, [roam]);
+  const onPointerDown = (e: React.PointerEvent) => {
+    if (!roam || (e.target as HTMLElement).closest("button, a")) return;
+    drag.current = { x: e.clientX, y: e.clientY };
   };
-  const onPointerUp = () => {
-    drag.current = null;
+  const onPointerMove = (e: React.PointerEvent) => {
+    const el = stageRef.current;
+    if (!el || roam || e.pointerType !== "mouse") return;
+    const r = el.getBoundingClientRect();
+    store.current.pointer.x = ((e.clientX - r.left) / r.width) * 2 - 1;
+    store.current.pointer.y = -(((e.clientY - r.top) / r.height) * 2 - 1);
   };
 
   const hold = (action: string) => ({
@@ -287,7 +300,6 @@ export function Experience({ projects, intro }: { projects: WallProject[]; intro
         tabIndex={-1}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
-        onPointerUp={onPointerUp}
         className={`${roam ? "fixed inset-0 z-[60] touch-none" : "sticky top-0 h-[100svh]"} overflow-hidden bg-wall outline-none`}
       >
         <div aria-hidden={scene === "ready"} className={`absolute inset-0 transition-opacity duration-700 ${scene === "ready" ? "opacity-0" : "opacity-100"}`}>
@@ -414,9 +426,11 @@ export function Experience({ projects, intro }: { projects: WallProject[]; intro
         {roam && (
           <div className="pointer-events-none absolute inset-0 flex flex-col justify-between p-4 sm:p-8">
             <div className="flex items-start justify-between gap-4">
-              <div className="max-w-[30rem] bg-wall/60 p-4 backdrop-blur-sm">
-                <h2 className="font-display text-2xl">Free roam</h2>
-                <p className="mt-1 text-[0.95rem] text-ink-2">
+              <div className="max-w-[30rem] bg-wall/60 p-3 backdrop-blur-sm sm:p-4">
+                <h2 className="font-display text-xl sm:text-2xl">Free roam</h2>
+                {/* Phones and tablets get the on-screen arrows; larger screens get the keyboard. */}
+                <p className="mt-1 text-[0.875rem] text-ink-2 lg:hidden">Drag to look, hold the arrows to move, and tap a screen to open it.</p>
+                <p className="mt-1 hidden text-[0.95rem] text-ink-2 lg:block">
                   Drag to look. Move with W A S D or the arrow keys, Q and E for down and up. Click a screen to open its case study. Esc returns
                   you to the tour at the nearest stop.
                 </p>
@@ -424,7 +438,7 @@ export function Experience({ projects, intro }: { projects: WallProject[]; intro
               <button
                 type="button"
                 onClick={() => exitRoamRef.current?.()}
-                className="label pointer-events-auto inline-flex min-h-11 items-center border border-brass bg-wall/70 px-4 text-ink hover:bg-brass hover:text-placard-ink"
+                className="label pointer-events-auto inline-flex min-h-11 shrink-0 items-center whitespace-nowrap border border-brass bg-wall/70 px-4 text-ink hover:bg-brass hover:text-placard-ink"
               >
                 Exit free roam
               </button>

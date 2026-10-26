@@ -36,6 +36,21 @@ test.describe("3D world on desktop", () => {
     expect(Math.abs(after - before)).toBeLessThan(5);
   });
 
+  test("free roam ends from the Exit button after dragging to look", async ({ page }) => {
+    await page.goto("/?force3d#inputshare");
+    await expect(page.locator("[data-scene]")).toHaveAttribute("data-scene", "ready", { timeout: 30_000 });
+    await page.getByRole("button", { name: "Free roam" }).click();
+    const exit = page.getByRole("button", { name: "Exit free roam" });
+    await expect(exit).toBeVisible();
+    await page.mouse.move(640, 500);
+    await page.mouse.down();
+    await page.mouse.move(700, 460, { steps: 5 });
+    await page.mouse.up();
+    await exit.click();
+    await expect(exit).toHaveCount(0);
+    await expect.poll(() => page.evaluate(() => document.documentElement.style.overflow)).toBe("");
+  });
+
   test("wall labels link to their case studies", async ({ page }) => {
     await page.goto("/#groovemind");
     await skipLoader(page);
